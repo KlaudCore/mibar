@@ -1,23 +1,1136 @@
-{
-  "name": "RestoPWA - Gestión de Restaurante",
-  "short_name": "RestoPWA",
-  "description": "Administra mesas, pedidos y menú en tiempo real con Firebase.",
-  "start_url": "/mibar/",
-  "display": "standalone",
-  "background_color": "#0b1121",
-  "theme_color": "#0b1121",
-  "icons": [
-    {
-      "src": "/mibar/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/mibar/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>RestoPWA - Gestión de Restaurante</title>
+
+    <!-- ========== OPEN GRAPH (para compartir en redes) ========== -->
+    <meta property="og:title" content="RestoPWA - Gestión de Restaurante" />
+    <meta property="og:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
+    <meta property="og:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
+    <meta property="og:url" content="https://klaudcore.github.io/mibar/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RestoPWA - Gestión de Restaurante" />
+    <meta name="twitter:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
+    <meta name="twitter:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
+
+    <!-- ========== ICONOS PWA ========== -->
+    <link rel="manifest" href="/mibar/manifest.json" />
+    <link rel="apple-touch-icon" href="/mibar/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/mibar/icon-192.png" />
+
+    <!-- ========== FUENTES Y FIREBASE ========== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        /* ========== CSS ========== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-header: rgba(255,255,255,0.78);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-full: 9999px;
+            --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --nav-bg: #ffffff;
+            --active-pill-host: #2563eb;
+            --active-pill-mesero: #d97706;
+            --active-pill-cocina: #059669;
+            --text-active: #ffffff;
+            --text-inactive: #1e293b;
+        }
+        body.dark-mode {
+            --bg-primary: #0f172a;
+            --bg-card: #1e293b;
+            --bg-header: rgba(15,23,42,0.85);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+            --nav-bg: #1e293b;
+            --text-inactive: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            body:not(.light-mode):not(.dark-mode) {
+                --bg-primary: #0f172a;
+                --bg-card: #1e293b;
+                --bg-header: rgba(15,23,42,0.85);
+                --text-primary: #f1f5f9;
+                --text-secondary: #cbd5e1;
+                --text-muted: #64748b;
+                --border-color: #334155;
+                --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+                --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+                --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+                --nav-bg: #1e293b;
+                --text-inactive: #e2e8f0;
+            }
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+            transition: background 0.3s, color 0.3s;
+        }
+        .app-header {
+            background: var(--bg-header);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .logo-area h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+        .role-badge {
+            background: var(--border-color);
+            padding: 0.2rem 0.9rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: background 0.3s, color 0.3s;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .permiso-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.9rem;
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+        }
+        .permiso-btn:hover { transform: scale(1.04); box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
+        .theme-toggle {
+            background: var(--border-color);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, transform 0.2s;
+            color: var(--text-primary);
+        }
+        .theme-toggle:hover { transform: scale(1.05); background: var(--text-muted); }
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            transition: transform 0.4s;
+        }
+        .nav-roles {
+            display: flex;
+            background: var(--nav-bg);
+            padding: 6px;
+            border-radius: 48px;
+            box-shadow: var(--shadow-md);
+            isolation: isolate;
+            gap: 4px;
+            transition: background 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        .btn-role {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            position: relative;
+            border-radius: 40px;
+            outline: none;
+            min-width: 70px;
+        }
+        .pill {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 40px;
+            transition: color 0.3s var(--transition), background 0.3s var(--transition);
+            color: var(--text-inactive);
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        .btn-role.active .pill { color: var(--text-active); }
+        .btn-role[data-role="host"].active .pill { background: var(--active-pill-host); }
+        .btn-role[data-role="mesero"].active .pill { background: var(--active-pill-mesero); }
+        .btn-role[data-role="cocina"].active .pill { background: var(--active-pill-cocina); }
+        .pill svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            flex-shrink: 0;
+        }
+        .btn-role.active .pill { view-transition-name: active-role-pill; }
+        #navRoleScope::view-transition { position: absolute; inset: 0; }
+        ::view-transition-group(active-role-pill) { animation-duration: 0.35s; animation-timing-function: cubic-bezier(0.4,0,0.2,1); }
+        html:active-view-transition-type(slide-right) .pill span { view-transition-name: role-label; }
+        html:active-view-transition-type(slide-left) .pill span { view-transition-name: role-label; }
+        ::view-transition-old(role-label) { animation: 0.25s cubic-bezier(0.4,0,0.2,1) both fade-out, 0.25s cubic-bezier(0.4,0,0.2,1) both slide-to-side; }
+        ::view-transition-new(role-label) { animation: 0.25s cubic-bezier(0.4,0,0.2,1) both fade-in, 0.25s cubic-bezier(0.4,0,0.2,1) both slide-from-side; }
+        @keyframes fade-in { from { opacity: 0; } }
+        @keyframes fade-out { to { opacity: 0; } }
+        @keyframes slide-to-side { to { transform: translateX(-10px); opacity: 0; } }
+        @keyframes slide-from-side { from { transform: translateX(10px); opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+            ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+        }
+        #viewsContainer {
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+        }
+        .card-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .card-panel:hover { box-shadow: var(--shadow-md); }
+        .card-panel h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-panel p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+        }
+        .mesas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        .mesa-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 1.2rem 0.8rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s, box-shadow 0.2s, background 0.3s, border-color 0.3s;
+            cursor: default;
+        }
+        .mesa-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .mesa-card.ocupada { border-left: 5px solid #ef4444; background: #fef2f2; }
+        .mesa-card.disponible { border-left: 5px solid #22c55e; background: #f0fdf4; }
+        @media (prefers-color-scheme: dark) {
+            .mesa-card.ocupada { background: #1f2a3f; border-left-color: #ef4444; }
+            .mesa-card.disponible { background: #1a2e2a; border-left-color: #22c55e; }
+        }
+        .numero-mesa { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+        .estado-texto { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; margin: 0.4rem 0 0.8rem; color: var(--text-secondary); }
+        .btn-mesa { padding: 0.5rem 0.8rem; border: none; border-radius: var(--radius-full); font-weight: 600; font-size: 0.8rem; cursor: pointer; width: 100%; transition: 0.15s; }
+        .btn-ocupar { background: #f97316; color: white; }
+        .btn-ocupar:hover { background: #ea580c; transform: scale(0.98); }
+        .btn-liberar { background: #64748b; color: white; }
+        .btn-liberar:hover { background: #475569; transform: scale(0.98); }
+        .aviso-ocupacion {
+            background: var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            margin-top: 1.2rem;
+            line-height: 1.5;
+            transition: background 0.3s;
+        }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem; }
+        label { font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); }
+        select, input, textarea {
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: 0.2s;
+            font-family: var(--font);
+            width: 100%;
+        }
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .items-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin: 1rem 0;
+        }
+        .item-tag {
+            background: #f59e0b;
+            color: #1e293b;
+            padding: 0.5rem 1.2rem;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            transition: 0.15s;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            user-select: none;
+        }
+        .item-tag:hover {
+            background: #d97706;
+            color: #ffffff;
+            transform: scale(0.96);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+        }
+        .item-tag:active { transform: scale(0.92); }
+        .item-tag.dia {
+            background: #f59e0b;
+            color: #1e293b;
+        }
+        .item-tag.dia:hover {
+            background: #d97706;
+            color: #ffffff;
+        }
+        .carrito {
+            background: var(--bg-primary);
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius-md);
+            margin: 0.8rem 0;
+            border: 1px solid var(--border-color);
+        }
+        .pedido-item { display: flex; justify-content: space-between; padding: 0.2rem 0; font-size: 0.9rem; }
+        .btn-principal {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.15s;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(34,197,94,0.25);
+        }
+        .btn-principal:hover { background: #16a34a; transform: scale(0.98); }
+        .btn-secundario {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-secundario:hover { background: #475569; transform: scale(0.96); }
+        .btn-peligro {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.2rem 0.8rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.75rem;
+        }
+        .btn-peligro:hover { background: #dc2626; transform: scale(0.95); }
+        .btn-mover {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: 0.15s;
+            padding: 0;
+        }
+        .btn-mover:hover { background: var(--border-color); color: var(--text-primary); }
+        .btn-mover:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .pedido-pendiente {
+            background: #fffbeb;
+            border-left: 5px solid #f59e0b;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 0.8rem 0;
+        }
+        @media (prefers-color-scheme: dark) { .pedido-pendiente { background: #1f2a1f; border-left-color: #f59e0b; } }
+        .badge-mesero {
+            background: var(--border-color);
+            border-radius: var(--radius-full);
+            padding: 0.2rem 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .btn-entregar {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-entregar:hover { background: #059669; transform: scale(0.96); }
+        .btn-liberar-pedido {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-liberar-pedido:hover { background: #ea580c; transform: scale(0.96); }
+        .empty-message { text-align: center; color: var(--text-muted); padding: 2rem 0; font-style: italic; }
+        .notificacion-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: #f1f5f9;
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1);
+            max-width: 340px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        @keyframes toastIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .menu-item-card {
+            background: var(--bg-primary);
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+            transition: background 0.3s;
+        }
+        .menu-item-card .info { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; }
+        .menu-item-card .nombre { font-weight: 600; }
+        .menu-item-card .precio { font-size: 0.85rem; color: var(--text-secondary); }
+        .menu-item-card .acciones {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .form-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .form-row input { flex: 1; min-width: 120px; }
+        @media (max-width: 640px) {
+            .app-header { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+            .logo-area { justify-content: center; }
+            .nav-roles { justify-content: space-around; padding: 4px; }
+            .btn-role { min-width: 50px; flex: 1; }
+            .pill { padding: 6px 10px; font-size: 0.7rem; gap: 4px; }
+            .pill svg { width: 14px; height: 14px; }
+            #viewsContainer { padding: 0 0.8rem; }
+            .card-panel { padding: 1rem; }
+            .mesas-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.6rem; }
+            .menu-item-card { flex-wrap: wrap; gap: 0.5rem; }
+            .menu-item-card .acciones { width: 100%; justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-header">
+    <div class="logo-area">
+        <h1>🍽️ RestoPWA</h1>
+        <span class="role-badge" id="currentRoleBadge">Host</span>
+    </div>
+    <div class="header-actions">
+        <button id="requestPermisoBtn" class="permiso-btn" style="display:none;">🔔 Activar notificaciones</button>
+        <button id="themeToggleBtn" class="theme-toggle" title="Cambiar tema">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+        </button>
+    </div>
+    <nav class="nav-roles" id="navRoleScope">
+        <button class="btn-role" data-role="host" title="Host">
+            <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><rect x="6" y="9" width="12" height="2"/><rect x="6" y="13" width="8" height="2"/></svg><span class="label">Host</span></div>
+        </button>
+        <button class="btn-role" data-role="mesero" title="Mesero">
+            <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/><circle cx="12" cy="13" r="2"/></svg><span class="label">Mesero</span></div>
+        </button>
+        <button class="btn-role" data-role="cocina" title="Cocina">
+            <div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="8" r="1.5" fill="currentColor"/></svg><span class="label">Cocina</span></div>
+        </button>
+    </nav>
+</div>
+<div id="viewsContainer"></div>
+
+<script>
+    // ============================================================
+    // 🔥 CONFIGURACIÓN DE FIREBASE (proyecto "mibar-52b4d")
+    // ============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-W7aK7ydDVZrC1TkwbQqee9ca9OCbNLM",
+        authDomain: "mibar-52b4d.firebaseapp.com",
+        databaseURL: "https://mibar-52b4d-default-rtdb.firebaseio.com",
+        projectId: "mibar-52b4d",
+        storageBucket: "mibar-52b4d.firebasestorage.app",
+        messagingSenderId: "256299170602",
+        appId: "1:256299170602:web:37c53d203adaace0d83c53"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Estado local
+    let mesas = [];
+    let pedidos = [];
+    let nextPedidoId = 1;
+    let eventosOcupacion = [];
+    let menuDia = [];
+
+    let currentCarrito = [];
+    let currentMeseroNombre = "Carlos";
+    let currentRole = "host";
+    let swRegistration = null;
+
+    // ---------- SERVICE WORKER (Notificaciones Push) ----------
+    async function registerServiceWorker() {
+        if (!('serviceWorker' in navigator)) return;
+        try {
+            // Código del Service Worker (inline)
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                self.addEventListener('message', event => {
+                    if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+                        const { title, body, tag } = event.data;
+                        self.registration.showNotification(title, {
+                            body,
+                            icon: '/mibar/icon-192.png',
+                            badge: '/mibar/icon-192.png',
+                            tag: tag || 'resto-push',
+                            vibrate: [200,100,200],
+                            requireInteraction: true
+                        });
+                    }
+                });
+                self.addEventListener('push', event => {
+                    let data = { title: 'RestoPWA', body: 'Evento importante' };
+                    if (event.data) try { data = event.data.json(); } catch(e) {}
+                    event.waitUntil(
+                        self.registration.showNotification(data.title, {
+                            body: data.body,
+                            icon: '/mibar/icon-192.png',
+                            badge: '/mibar/icon-192.png'
+                        })
+                    );
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            const registration = await navigator.serviceWorker.register(swUrl);
+            URL.revokeObjectURL(swUrl);
+            swRegistration = registration;
+            if (Notification.permission === 'default') document.getElementById('requestPermisoBtn').style.display = 'inline-block';
+            else if (Notification.permission === 'granted') document.getElementById('requestPermisoBtn').style.display = 'none';
+            else document.getElementById('requestPermisoBtn').style.display = 'inline-block';
+        } catch (err) {
+            console.error('Error registrando SW:', err);
+        }
     }
-  ]
-}
+
+    async function solicitarPermisoNotificaciones() {
+        if (!('Notification' in window)) return alert('No soportado');
+        if (Notification.permission === 'granted') return;
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+            document.getElementById('requestPermisoBtn').style.display = 'none';
+            if (swRegistration?.active) {
+                swRegistration.active.postMessage({
+                    type: 'SHOW_NOTIFICATION',
+                    title: '✅ Notificaciones activas',
+                    body: 'Recibirás alertas de mesas y pedidos.'
+                });
+            }
+        }
+    }
+
+    async function enviarNotificacionPush(title, body, rolDestino = null) {
+        if (!swRegistration?.active || Notification.permission !== 'granted') return;
+        if (rolDestino && currentRole !== rolDestino) return;
+        swRegistration.active.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title,
+            body,
+            tag: `resto-${Date.now()}`
+        });
+    }
+
+    // ---------- FUNCIONES DE SINCRONIZACIÓN CON FIREBASE ----------
+    function guardarDatos() {
+        const data = { mesas, pedidos, nextPedidoId, eventosOcupacion: eventosOcupacion.slice(-6), menuDia };
+        db.ref('restoData').set(data).catch(err => console.error('Error guardando en Firebase:', err));
+    }
+
+    function cargarDatosDesdeFirebase(snapshot) {
+        const data = snapshot.val();
+        if (data) {
+            mesas = data.mesas || [];
+            pedidos = data.pedidos || [];
+            nextPedidoId = data.nextPedidoId || 1;
+            eventosOcupacion = data.eventosOcupacion || [];
+            menuDia = data.menuDia || [];
+            if (mesas.length === 0) {
+                for (let i = 1; i <= 8; i++) mesas.push({ id: i, numero: i, estado: 'disponible' });
+                guardarDatos();
+            }
+            if (menuDia.length > 0 && !menuDia[0].id) {
+                menuDia = menuDia.map((item, idx) => ({ ...item, id: Date.now() + idx }));
+                guardarDatos();
+            }
+            actualizarVistaActual();
+        } else {
+            for (let i = 1; i <= 8; i++) mesas.push({ id: i, numero: i, estado: 'disponible' });
+            guardarDatos();
+            actualizarVistaActual();
+        }
+    }
+
+    function escucharCambios() {
+        db.ref('restoData').on('value', (snapshot) => {
+            cargarDatosDesdeFirebase(snapshot);
+        });
+    }
+
+    function mostrarToast(mensaje, rolesPermitidos = ["host","mesero","cocina"]) {
+        if (!rolesPermitidos.includes(currentRole)) return;
+        const toast = document.createElement("div");
+        toast.className = "notificacion-toast";
+        toast.innerText = mensaje;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ---------- ACCIONES DE NEGOCIO ----------
+    function ocuparMesa(idMesa) {
+        const mesa = mesas.find(m => m.id === idMesa);
+        if (!mesa || mesa.estado === "ocupada") return false;
+        mesa.estado = "ocupada";
+        const msg = `🪑 Mesa ${mesa.numero} OCUPADA.`;
+        eventosOcupacion.unshift(msg);
+        if (eventosOcupacion.length > 6) eventosOcupacion.pop();
+        guardarDatos();
+        mostrarToast(msg, ["host"]);
+        enviarNotificacionPush("Mesa ocupada", `Mesa ${mesa.numero} ha sido ocupada.`, "host");
+        return true;
+    }
+    function liberarMesa(idMesa) {
+        const mesa = mesas.find(m => m.id === idMesa);
+        if (!mesa || mesa.estado === "disponible") return false;
+        const pedidosActivos = pedidos.filter(p => p.mesaId === idMesa && (p.estado === "pendiente" || p.estado === "listo"));
+        if (pedidosActivos.length > 0) {
+            mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar.`, ["host"]);
+            return false;
+        }
+        mesa.estado = "disponible";
+        const msg = `✅ Mesa ${mesa.numero} liberada.`;
+        eventosOcupacion.unshift(msg);
+        if (eventosOcupacion.length > 6) eventosOcupacion.pop();
+        guardarDatos();
+        mostrarToast(msg, ["host"]);
+        enviarNotificacionPush("Mesa disponible", `Mesa ${mesa.numero} ahora está libre.`, "host");
+        return true;
+    }
+    function agregarPedido(mesaId, itemsSeleccionados, waiterName) {
+        if (!waiterName.trim()) { mostrarToast("Ingresa nombre del mesero", ["mesero"]); return false; }
+        const mesa = mesas.find(m => m.id === mesaId);
+        if (!mesa || mesa.estado !== "ocupada") { mostrarToast("Mesa debe estar ocupada", ["mesero"]); return false; }
+        if (itemsSeleccionados.length === 0) { mostrarToast("Agrega productos", ["mesero"]); return false; }
+        const nuevoPedido = { id: nextPedidoId++, mesaId, items: [...itemsSeleccionados], estado: "pendiente", waiterName: waiterName.trim(), timestamp: Date.now() };
+        pedidos.push(nuevoPedido);
+        guardarDatos();
+        mostrarToast(`📝 Pedido #${nuevoPedido.id} enviado a cocina (Mesa ${mesa.numero})`, ["mesero"]);
+        enviarNotificacionPush("Nuevo pedido en cocina", `Mesa ${mesa.numero} - Pedido #${nuevoPedido.id} por ${waiterName}`, "cocina");
+        return true;
+    }
+    function liberarPedidoCocina(pedidoId) {
+        const pedido = pedidos.find(p => p.id === pedidoId);
+        if (!pedido || pedido.estado !== "pendiente") return false;
+        pedido.estado = "listo";
+        guardarDatos();
+        const mesaNum = mesas.find(m => m.id === pedido.mesaId)?.numero || "?";
+        if (currentRole === "cocina") mostrarToast(`✅ Pedido #${pedido.id} listo`, ["cocina"]);
+        enviarNotificacionPush(`Pedido listo #${pedido.id}`, `Mesa ${mesaNum} - Listo para servir. Mesero: ${pedido.waiterName}`, "mesero");
+        return true;
+    }
+    function entregarPedidoListo(pedidoId, waiterName) {
+        const index = pedidos.findIndex(p => p.id === pedidoId && p.estado === "listo");
+        if (index === -1) return false;
+        if (pedidos[index].waiterName !== waiterName) return false;
+        pedidos.splice(index, 1);
+        guardarDatos();
+        mostrarToast(`✅ Pedido #${pedidoId} entregado`, ["mesero"]);
+        return true;
+    }
+
+    // ---------- GESTIÓN MENÚ DEL DÍA (con reordenamiento) ----------
+    function agregarItemMenuDia(nombre, precio) {
+        const nuevo = { id: Date.now(), nombre: nombre.trim(), precio: parseFloat(precio) };
+        menuDia.push(nuevo);
+        guardarDatos();
+        mostrarToast(`🍽️ "${nombre}" añadido al menú del día`, ["host"]);
+    }
+    function eliminarItemMenuDia(id) {
+        menuDia = menuDia.filter(item => item.id !== id);
+        guardarDatos();
+        mostrarToast(`🗑️ Item eliminado del menú del día`, ["host"]);
+    }
+    function editarItemMenuDia(id, nuevoNombre, nuevoPrecio) {
+        const item = menuDia.find(i => i.id === id);
+        if (item) {
+            item.nombre = nuevoNombre.trim();
+            item.precio = parseFloat(nuevoPrecio);
+            guardarDatos();
+            mostrarToast(`✏️ Item actualizado`, ["host"]);
+        }
+    }
+    function moverItemMenuDia(id, direccion) {
+        const index = menuDia.findIndex(item => item.id === id);
+        if (index === -1) return;
+        const nuevoIndex = index + direccion;
+        if (nuevoIndex < 0 || nuevoIndex >= menuDia.length) return;
+        [menuDia[index], menuDia[nuevoIndex]] = [menuDia[nuevoIndex], menuDia[index]];
+        guardarDatos();
+        mostrarToast(`🔄 Item reordenado`, ["host"]);
+    }
+
+    function actualizarVistaActual() {
+        if (currentRole === "mesero") {
+            const nombreInput = document.getElementById("meseroNombreInput");
+            if (nombreInput) currentMeseroNombre = nombreInput.value.trim() || "Carlos";
+        }
+        if (currentRole === "host") renderHostView();
+        else if (currentRole === "mesero") renderMeseroView();
+        else if (currentRole === "cocina") renderCocinaView();
+    }
+
+    // ---------- RENDERIZADO DE VISTAS ----------
+    function renderHostView() {
+        const container = document.getElementById("viewsContainer");
+        if (!container) return;
+        container.innerHTML = `
+            <div class="card-panel">
+                <h2>🗂️ Gestión de Mesas</h2>
+                <p>Ocupa o libera mesas. Las notificaciones push te mantienen informado.</p>
+                <div id="mesasGridHost" class="mesas-grid"></div>
+                <div class="aviso-ocupacion"><strong>📢 Últimas notificaciones</strong><br><span id="eventosHostList">${eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos"}</span></div>
+            </div>
+            <div class="card-panel">
+                <h2>📋 Menú del Día <span style="font-size:0.8rem;font-weight:400;color:var(--text-secondary);">(edición en tiempo real)</span></h2>
+                <p>Los platos del día aparecerán en la vista del mesero. Usa las flechas ↑↓ para reordenar.</p>
+                <div style="margin-bottom:1rem;">
+                    <div class="form-row">
+                        <input type="text" id="nuevoItemNombre" placeholder="Nombre del plato" style="flex:2;">
+                        <input type="number" id="nuevoItemPrecio" placeholder="Precio" step="0.01" style="flex:1;">
+                        <button id="btnAgregarMenuDia" class="btn-principal" style="width:auto;padding:0.6rem 1.8rem;flex:0 0 auto;">➕ Añadir</button>
+                    </div>
+                </div>
+                <div id="listaMenuDiaHost"></div>
+            </div>
+        `;
+        const grid = document.getElementById("mesasGridHost");
+        if (grid) {
+            grid.innerHTML = "";
+            mesas.forEach(mesa => {
+                const card = document.createElement("div");
+                card.className = `mesa-card ${mesa.estado}`;
+                card.innerHTML = `
+                    <div class="numero-mesa">${mesa.numero}</div>
+                    <div class="estado-texto">${mesa.estado === "ocupada" ? "🟠 OCUPADA" : "🟢 DISPONIBLE"}</div>
+                    ${mesa.estado === "disponible" ? '<button class="btn-mesa btn-ocupar" data-id="'+mesa.id+'">➕ Ocupar mesa</button>' : '<button class="btn-mesa btn-liberar" data-id="'+mesa.id+'">🔓 Liberar mesa</button>'}
+                `;
+                grid.appendChild(card);
+            });
+            document.querySelectorAll(".btn-ocupar").forEach(btn => btn.addEventListener("click", e => ocuparMesa(parseInt(btn.dataset.id))));
+            document.querySelectorAll(".btn-liberar").forEach(btn => btn.addEventListener("click", e => liberarMesa(parseInt(btn.dataset.id))));
+        }
+        document.getElementById("eventosHostList").innerHTML = eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos";
+
+        const lista = document.getElementById("listaMenuDiaHost");
+        if (lista) {
+            if (menuDia.length === 0) {
+                lista.innerHTML = "<div class='empty-message'>No hay platos en el menú del día. ¡Añade algunos!</div>";
+            } else {
+                let html = "";
+                menuDia.forEach((item, idx) => {
+                    const isFirst = idx === 0;
+                    const isLast = idx === menuDia.length - 1;
+                    html += `
+                        <div class="menu-item-card">
+                            <div class="info">
+                                <div class="nombre">${item.nombre}</div>
+                                <div class="precio">$${item.precio.toFixed(2)}</div>
+                            </div>
+                            <div class="acciones">
+                                <button class="btn-mover" data-id="${item.id}" data-dir="-1" ${isFirst ? 'disabled' : ''} title="Subir">↑</button>
+                                <button class="btn-mover" data-id="${item.id}" data-dir="1" ${isLast ? 'disabled' : ''} title="Bajar">↓</button>
+                                <button class="btn-secundario btn-editar-menu" data-id="${item.id}" style="padding:0.2rem 0.6rem;font-size:0.7rem;">✏️</button>
+                                <button class="btn-peligro btn-eliminar-menu" data-id="${item.id}">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                lista.innerHTML = html;
+                document.querySelectorAll(".btn-mover").forEach(btn => {
+                    btn.addEventListener("click", e => {
+                        const id = parseInt(btn.dataset.id);
+                        const dir = parseInt(btn.dataset.dir);
+                        moverItemMenuDia(id, dir);
+                    });
+                });
+                document.querySelectorAll(".btn-editar-menu").forEach(btn => {
+                    btn.addEventListener("click", e => {
+                        const id = parseInt(btn.dataset.id);
+                        const item = menuDia.find(i => i.id === id);
+                        if (!item) return;
+                        const nuevoNombre = prompt("Nuevo nombre:", item.nombre);
+                        if (nuevoNombre === null) return;
+                        const nuevoPrecio = prompt("Nuevo precio:", item.precio);
+                        if (nuevoPrecio === null) return;
+                        const precioNum = parseFloat(nuevoPrecio);
+                        if (isNaN(precioNum) || precioNum <= 0) { mostrarToast("Precio inválido", ["host"]); return; }
+                        editarItemMenuDia(id, nuevoNombre, precioNum);
+                    });
+                });
+                document.querySelectorAll(".btn-eliminar-menu").forEach(btn => {
+                    btn.addEventListener("click", e => {
+                        const id = parseInt(btn.dataset.id);
+                        if (confirm("¿Eliminar este plato del menú del día?")) eliminarItemMenuDia(id);
+                    });
+                });
+            }
+        }
+        document.getElementById("btnAgregarMenuDia").addEventListener("click", () => {
+            const nombre = document.getElementById("nuevoItemNombre").value.trim();
+            const precio = parseFloat(document.getElementById("nuevoItemPrecio").value);
+            if (!nombre) { mostrarToast("Ingresa un nombre", ["host"]); return; }
+            if (isNaN(precio) || precio <= 0) { mostrarToast("Ingresa un precio válido", ["host"]); return; }
+            agregarItemMenuDia(nombre, precio);
+            document.getElementById("nuevoItemNombre").value = "";
+            document.getElementById("nuevoItemPrecio").value = "";
+        });
+    }
+
+    function renderMeseroView() {
+        const container = document.getElementById("viewsContainer");
+        if (!container) return;
+        container.innerHTML = `
+            <div class="card-panel">
+                <h2>🧾 Tomar pedido</h2>
+                <div class="flex-between">
+                    <label>👨‍🍳 Tu nombre</label>
+                    <input type="text" id="meseroNombreInput" value="${currentMeseroNombre}" style="flex:1; max-width:240px;">
+                </div>
+                <div style="margin-top:0.8rem;">
+                    <label>📌 Mesa ocupada</label>
+                    <select id="selectMesaPedido" style="width:100%;"></select>
+                </div>
+                <div style="margin-top:1.2rem;">
+                    <strong>🍕 Productos (Menú del Día)</strong>
+                    <div id="itemsDisponiblesMesero" class="items-list"></div>
+                    <div id="carritoPreviewMesero" class="carrito"></div>
+                    <button id="btnEnviarPedidoMesero" class="btn-principal">🚀 Enviar pedido a cocina</button>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h3>✅ Mis pedidos listos</h3>
+                <div id="pedidosListosMeseroPanel"></div>
+                <div class="aviso-ocupacion" style="margin-top:0.8rem;">🔔 Recibirás notificaciones push cuando un pedido esté listo.</div>
+            </div>
+        `;
+        const select = document.getElementById("selectMesaPedido");
+        if (select) {
+            const ocupadas = mesas.filter(m => m.estado === "ocupada");
+            select.innerHTML = '<option value="">-- Mesa ocupada --</option>';
+            ocupadas.forEach(m => select.innerHTML += `<option value="${m.id}">Mesa ${m.numero}</option>`);
+            if (ocupadas.length === 0) select.innerHTML = '<option disabled>No hay mesas ocupadas</option>';
+        }
+        const itemsContainer = document.getElementById("itemsDisponiblesMesero");
+        if (itemsContainer) {
+            itemsContainer.innerHTML = "";
+            if (menuDia.length === 0) {
+                const msg = document.createElement("div");
+                msg.className = "empty-message";
+                msg.textContent = "📭 El menú del día está vacío. El Host debe añadir platos.";
+                itemsContainer.appendChild(msg);
+            } else {
+                menuDia.forEach(item => {
+                    const span = document.createElement("span");
+                    span.className = "item-tag dia";
+                    span.textContent = `🔥 ${item.nombre} - $${item.precio.toFixed(2)}`;
+                    span.onclick = () => {
+                        const exist = currentCarrito.find(i => i.nombre === item.nombre && i.id === item.id);
+                        if (exist) exist.cantidad += 1;
+                        else currentCarrito.push({ id: item.id, nombre: item.nombre, precio: item.precio, cantidad: 1, esDia: true });
+                        renderCarrito();
+                    };
+                    itemsContainer.appendChild(span);
+                });
+            }
+        }
+        const renderCarrito = () => {
+            const div = document.getElementById("carritoPreviewMesero");
+            if (!div) return;
+            if (currentCarrito.length === 0) { div.innerHTML = "🛒 Carrito vacío."; return; }
+            let html = `<strong>🧾 Pedido actual</strong><br>`;
+            let total = 0;
+            currentCarrito.forEach(i => {
+                html += `<div class="pedido-item">${i.nombre} x${i.cantidad} <span>$${(i.precio * i.cantidad).toFixed(2)}</span></div>`;
+                total += i.precio * i.cantidad;
+            });
+            html += `<hr style="border-color:var(--border-color);margin:0.5rem 0;"><strong>Total: $${total.toFixed(2)}</strong> <button id="vaciarCarritoMesero" style="background:#ef4444;color:white;border:none;padding:0.2rem 1rem;border-radius:var(--radius-full);cursor:pointer;">Vaciar</button>`;
+            div.innerHTML = html;
+            document.getElementById("vaciarCarritoMesero")?.addEventListener("click", () => { currentCarrito = []; renderCarrito(); });
+        };
+        renderCarrito();
+        document.getElementById("btnEnviarPedidoMesero").onclick = () => {
+            const mesaId = parseInt(document.getElementById("selectMesaPedido").value);
+            const waiter = document.getElementById("meseroNombreInput").value.trim();
+            if (!mesaId) return mostrarToast("Selecciona mesa", ["mesero"]);
+            if (!waiter) return mostrarToast("Nombre requerido", ["mesero"]);
+            if (currentCarrito.length === 0) return mostrarToast("Agrega productos", ["mesero"]);
+            const itemsPedido = currentCarrito.map(it => ({ nombre: it.nombre, cantidad: it.cantidad, precio: it.precio }));
+            if (agregarPedido(mesaId, itemsPedido, waiter)) {
+                currentCarrito = [];
+                renderCarrito();
+            }
+        };
+        const actualizarListos = () => {
+            const nombre = document.getElementById("meseroNombreInput")?.value.trim() || currentMeseroNombre;
+            const misListos = pedidos.filter(p => p.estado === "listo" && p.waiterName === nombre);
+            const panel = document.getElementById("pedidosListosMeseroPanel");
+            if (!panel) return;
+            if (misListos.length === 0) { panel.innerHTML = "<div class='empty-message'>📭 No hay pedidos listos para ti.</div>"; return; }
+            let html = "";
+            misListos.forEach(ped => {
+                const mesaNum = mesas.find(m => m.id === ped.mesaId)?.numero || "?";
+                html += `
+                    <div style="background:var(--bg-primary);padding:1rem;border-radius:var(--radius-md);margin:0.8rem 0;border-left:4px solid #f59e0b;">
+                        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.4rem;"><strong>🍽️ Mesa ${mesaNum} | Pedido #${ped.id}</strong><span class="badge-mesero">👨‍🍳 ${ped.waiterName}</span></div>
+                        <div style="font-size:0.9rem;margin:0.4rem 0;">📦 ${ped.items.map(i=>`${i.nombre} x${i.cantidad}`).join(", ")}</div>
+                        <button class="btn-entregar" data-id="${ped.id}">✅ Entregar a cliente</button>
+                    </div>
+                `;
+            });
+            panel.innerHTML = html;
+            document.querySelectorAll(".btn-entregar").forEach(btn => btn.addEventListener("click", e => {
+                if (entregarPedidoListo(parseInt(btn.dataset.id), nombre)) actualizarListos();
+            }));
+        };
+        actualizarListos();
+        document.getElementById("meseroNombreInput")?.addEventListener("input", actualizarListos);
+    }
+
+    function renderCocinaView() {
+        const container = document.getElementById("viewsContainer");
+        if (!container) return;
+        container.innerHTML = `
+            <div class="card-panel">
+                <h2>👩‍🍳 Pedidos pendientes en cocina</h2>
+                <p>Prepara y libera pedidos. El mesero recibirá una notificación push automática.</p>
+                <div id="cocinaPedidosList"></div>
+            </div>
+        `;
+        const actualizar = () => {
+            const cont = document.getElementById("cocinaPedidosList");
+            if (!cont) return;
+            const pendientes = pedidos.filter(p => p.estado === "pendiente");
+            if (pendientes.length === 0) { cont.innerHTML = "<div class='empty-message'>✅ Cocina sin pedidos pendientes</div>"; return; }
+            let html = "";
+            pendientes.forEach(ped => {
+                const mesaNum = mesas.find(m => m.id === ped.mesaId)?.numero || "?";
+                html += `
+                    <div class="pedido-pendiente">
+                        <div class="flex-between"><strong>📌 Pedido #${ped.id} | Mesa ${mesaNum}</strong><span class="badge-mesero">👨‍🍳 ${ped.waiterName}</span></div>
+                        <div style="margin:0.5rem 0;">🍲 ${ped.items.map(i=>`${i.nombre} x${i.cantidad}`).join(", ")}</div>
+                        <button class="btn-liberar-pedido" data-id="${ped.id}">🔥 Liberar (listo para servir)</button>
+                    </div>
+                `;
+            });
+            cont.innerHTML = html;
+            document.querySelectorAll(".btn-liberar-pedido").forEach(btn => btn.addEventListener("click", e => {
+                liberarPedidoCocina(parseInt(btn.dataset.id));
+                actualizar();
+            }));
+        };
+        actualizar();
+    }
+
+    // ---------- NAVEGACIÓN CON VIEW TRANSITIONS ----------
+    function setRoleWithTransition(role) {
+        if (role === currentRole) return;
+        const oldRole = currentRole;
+        const btnElements = document.querySelectorAll(".btn-role");
+        const activeBtn = Array.from(btnElements).find(b => b.dataset.role === role);
+        const oldActive = Array.from(btnElements).find(b => b.dataset.role === oldRole);
+        if (!activeBtn) return;
+        const newIndex = Array.from(btnElements).indexOf(activeBtn);
+        const oldIndex = Array.from(btnElements).indexOf(oldActive);
+        const direction = newIndex > oldIndex ? "slide-right" : "slide-left";
+        const updateDOM = () => {
+            btnElements.forEach(btn => btn.classList.remove("active"));
+            activeBtn.classList.add("active");
+            currentRole = role;
+            localStorage.setItem("resto_currentRole", role);
+            document.getElementById("currentRoleBadge").innerText = role === "host" ? "👑 Host" : (role === "mesero" ? "🧑‍🍳 Mesero" : "🍳 Cocina");
+            if (role !== "mesero") currentCarrito = [];
+            actualizarVistaActual();
+            mostrarToast(`👋 Cambiaste a ${role === "host" ? "Host" : role === "mesero" ? "Mesero" : "Cocina"}`, [role]);
+        };
+        const scope = document.getElementById("navRoleScope");
+        if (scope.startViewTransition) {
+            scope.startViewTransition({ update: updateDOM, types: [direction] });
+        } else if (document.startViewTransition) {
+            document.startViewTransition({ update: updateDOM, types: [direction] });
+        } else {
+            updateDOM();
+        }
+    }
+
+    function initRoleButtons() {
+        const btns = document.querySelectorAll(".btn-role");
+        btns.forEach(btn => {
+            btn.addEventListener("click", () => setRoleWithTransition(btn.dataset.role));
+        });
+        const currentBtn = Array.from(btns).find(b => b.dataset.role === currentRole);
+        if (currentBtn) currentBtn.classList.add("active");
+    }
+
+    // ---------- TEMA OSCURO/CLARO MANUAL ----------
+    function initTheme() {
+        const savedTheme = localStorage.getItem("resto_theme");
+        const body = document.body;
+        const btn = document.getElementById("themeToggleBtn");
+        const svg = btn.querySelector("svg");
+
+        function applyTheme(theme) {
+            body.classList.remove("dark-mode", "light-mode");
+            if (theme === "dark") {
+                body.classList.add("dark-mode");
+                svg.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />`;
+            } else {
+                body.classList.add("light-mode");
+                svg.innerHTML = `<circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />`;
+            }
+            localStorage.setItem("resto_theme", theme);
+        }
+
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            applyTheme(prefersDark ? "dark" : "light");
+        }
+
+        btn.addEventListener("click", () => {
+            const isDark = body.classList.contains("dark-mode");
+            applyTheme(isDark ? "light" : "dark");
+        });
+    }
+
+    // ---------- INICIALIZACIÓN ----------
+    async function init() {
+        // Conectar a Firebase y escuchar cambios
+        escucharCambios();
+
+        const savedRole = localStorage.getItem("resto_currentRole");
+        if (savedRole && ["host","mesero","cocina"].includes(savedRole)) currentRole = savedRole;
+        else currentRole = "host";
+        document.getElementById("currentRoleBadge").innerText = currentRole === "host" ? "👑 Host" : (currentRole === "mesero" ? "🧑‍🍳 Mesero" : "🍳 Cocina");
+
+        await registerServiceWorker();
+        initRoleButtons();
+
+        document.getElementById("requestPermisoBtn").addEventListener("click", solicitarPermisoNotificaciones);
+        initTheme();
+    }
+
+    init();
+</script>
+</body>
+</html>
