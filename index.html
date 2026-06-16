@@ -269,35 +269,20 @@
             margin-bottom: 1.2rem;
         }
 
-        /* ===== MAPA DEL RESTAURANTE (VISTA HOST) ===== */
+        /* ===== MAPA DEL RESTAURANTE (SOLO MESAS) ===== */
         .restaurant-map {
             position: relative;
             background: #e8d5b5; /* color madera */
             border: 8px solid #8b7355;
             border-radius: 20px;
-            padding: 30px 20px 20px 20px;
-            min-height: 500px;
+            padding: 30px 20px;
+            min-height: 400px;
             box-shadow: inset 0 0 30px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
         }
-        /* Escenario */
-        .stage {
-            background: #d4a373;
-            border: 3px solid #b5835a;
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: #3d2b1f;
-            width: 60%;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .stage::before { content: "🎤 "; }
         /* Zona mesas */
         .tables-area {
             display: grid;
@@ -305,14 +290,13 @@
             gap: 30px 50px;
             width: 100%;
             max-width: 700px;
-            margin: 10px 0;
             justify-items: center;
         }
         /* Cada mesa */
         .table-item {
             width: 100%;
             aspect-ratio: 1 / 1;
-            max-width: 110px;
+            max-width: 120px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -333,15 +317,15 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
         .table-item .table-number {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 800;
             line-height: 1.2;
         }
         .table-item .table-chairs {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 600;
             background: rgba(0,0,0,0.2);
-            padding: 0.1rem 0.5rem;
+            padding: 0.1rem 0.6rem;
             border-radius: 20px;
             margin-top: 2px;
         }
@@ -358,45 +342,13 @@
             background: #ef4444; /* rojo */
             color: #7f1d1d;
         }
-        /* Elementos del local */
-        .local-elements {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            width: 100%;
-            margin-top: 15px;
-            gap: 10px;
-        }
-        .local-element {
-            background: #b5835a;
-            border: 3px solid #8b6b44;
-            border-radius: 12px;
-            padding: 8px 16px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #2d1e12;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            text-align: center;
-            flex: 1;
-            min-width: 80px;
-        }
-        .local-element.bar { background: #a67c52; }
-        .local-element.kitchen { background: #c79a6e; }
-        .local-element.bathroom { background: #b8a08a; }
-        .local-element.entrance {
-            background: #c9b99a;
-            border-style: dashed;
-            font-size: 1rem;
-        }
-        .local-element.entrance::before { content: "🚪 "; }
-
         /* Leyenda de estados */
         .legend {
             display: flex;
             gap: 20px;
             justify-content: center;
-            margin-top: 15px;
-            font-size: 0.85rem;
+            margin-top: 25px;
+            font-size: 0.9rem;
             font-weight: 500;
         }
         .legend-item {
@@ -418,17 +370,16 @@
                 gap: 20px;
             }
             .table-item {
-                max-width: 90px;
+                max-width: 100px;
                 font-size: 1rem;
             }
-            .table-item .table-number { font-size: 1.2rem; }
-            .restaurant-map { padding: 20px 12px; }
-            .local-elements { flex-direction: column; align-items: stretch; }
+            .table-item .table-number { font-size: 1.3rem; }
+            .restaurant-map { padding: 20px 12px; min-height: 350px; }
         }
         @media (max-width: 450px) {
             .tables-area { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .table-item { max-width: 70px; }
-            .table-item .table-number { font-size: 1rem; }
+            .table-item { max-width: 80px; }
+            .table-item .table-number { font-size: 1.1rem; }
         }
 
         /* ===== ESTILOS GENERALES (card, botones, etc.) ===== */
@@ -798,21 +749,18 @@
             nextPedidoId = data.nextPedidoId || 1;
             eventosOcupacion = data.eventosOcupacion || [];
             menuDia = data.menuDia || [];
-            // Asegurar que las mesas tengan capacidad
             if (mesas.length === 0) {
-                // 6 mesas con capacidades que sumen 8 sillas
                 const capacidades = [2, 2, 1, 1, 1, 1];
                 for (let i = 0; i < 6; i++) {
                     mesas.push({
                         id: i + 1,
                         numero: i + 1,
-                        estado: 'disponible', // disponible, reservada, ocupada
+                        estado: 'disponible',
                         capacidad: capacidades[i]
                     });
                 }
                 guardarDatos();
             } else {
-                // Asegurar que cada mesa tenga capacidad (si no, asignar por defecto)
                 mesas.forEach(m => {
                     if (!m.capacidad) m.capacidad = 1;
                 });
@@ -823,7 +771,6 @@
             }
             actualizarVistaActual();
         } else {
-            // Primera vez: inicializar datos
             const capacidades = [2, 2, 1, 1, 1, 1];
             for (let i = 0; i < 6; i++) {
                 mesas.push({
@@ -859,7 +806,6 @@
     function cambiarEstadoMesa(id) {
         const mesa = mesas.find(m => m.id === id);
         if (!mesa) return false;
-        // Ciclo: disponible -> reservada -> ocupada -> disponible
         if (mesa.estado === 'disponible') {
             mesa.estado = 'reservada';
             const msg = `🟡 Mesa ${mesa.numero} RESERVADA.`;
@@ -877,7 +823,6 @@
             mostrarToast(msg, ["host"]);
             enviarNotificacionPush("Mesa ocupada", `Mesa ${mesa.numero} ha sido ocupada.`, "host");
         } else if (mesa.estado === 'ocupada') {
-            // Verificar si tiene pedidos activos
             const pedidosActivos = pedidos.filter(p => p.mesaId === id && (p.estado === "pendiente" || p.estado === "listo"));
             if (pedidosActivos.length > 0) {
                 mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar. No se puede liberar.`, ["host"]);
@@ -894,7 +839,6 @@
         return true;
     }
 
-    // Funciones antiguas de ocupar/liberar se mantienen por compatibilidad (ya no se usan desde el mapa)
     function ocuparMesa(id) {
         const mesa = mesas.find(m => m.id === id);
         if (!mesa || mesa.estado === 'ocupada') return false;
@@ -1003,15 +947,13 @@
         else if (currentRole === "cocina") renderCocinaView();
     }
 
-    // ---------- VISTA HOST: MAPA DEL RESTAURANTE ----------
+    // ---------- VISTA HOST: MAPA DEL RESTAURANTE (SOLO MESAS) ----------
     function renderHostView() {
         const container = document.getElementById("viewsContainer");
         if (!container) return;
 
-        // Ordenar mesas por número para mostrarlas en orden
         const mesasOrdenadas = [...mesas].sort((a, b) => a.numero - b.numero);
 
-        // Construir el HTML del mapa
         let mesasHtml = '';
         mesasOrdenadas.forEach(mesa => {
             const estadoClass = `estado-${mesa.estado}`;
@@ -1028,17 +970,9 @@
                 <h2>🗺️ Plano del Restaurante</h2>
                 <p>Haz clic en una mesa para cambiar su estado: Libre (verde) → Reservada (amarillo) → Ocupada (rojo) → Libre.</p>
                 <div class="restaurant-map">
-                    <!-- Escenario -->
-                    <div class="stage">Escenario</div>
-
                     <!-- Mesas (6 en el centro) -->
                     <div class="tables-area">
                         ${mesasHtml}
-                    </div>
-
-                    <!-- Elementos del local -->
-                    <div class="local-elements">
-                        <div class="local-element entrance">Entrada</div>
                     </div>
 
                     <!-- Leyenda -->
@@ -1068,7 +1002,6 @@
             </div>
         `;
 
-        // Eventos de clic en mesas
         document.querySelectorAll('.table-item').forEach(el => {
             el.addEventListener('click', function() {
                 const id = parseInt(this.dataset.id);
@@ -1076,7 +1009,7 @@
             });
         });
 
-        // Menú del día (igual que antes)
+        // Menú del día (sin cambios)
         const lista = document.getElementById("listaMenuDiaHost");
         if (lista) {
             if (menuDia.length === 0) {
