@@ -3,18 +3,33 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>RestoPWA - Menú en Tiempo Real con Firebase</title>
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#0b1121" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>RestoPWA - Gestión de Restaurante</title>
+
+    <!-- ========== OPEN GRAPH (para compartir en redes) ========== -->
+    <meta property="og:title" content="RestoPWA - Gestión de Restaurante" />
+    <meta property="og:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
+    <meta property="og:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
+    <meta property="og:url" content="https://klaudcore.github.io/mibar/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RestoPWA - Gestión de Restaurante" />
+    <meta name="twitter:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
+    <meta name="twitter:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
+
+    <!-- ========== ICONOS PWA ========== -->
+    <link rel="manifest" href="/mibar/manifest.json" />
+    <link rel="apple-touch-icon" href="/mibar/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/mibar/icon-192.png" />
+
+    <!-- ========== FUENTES Y FIREBASE ========== -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
-    <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
+        /* ========== CSS ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg-primary: #f1f5f9;
@@ -384,6 +399,26 @@
             font-size: 0.75rem;
         }
         .btn-peligro:hover { background: #dc2626; transform: scale(0.95); }
+        .btn-mover {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: 0.15s;
+            padding: 0;
+        }
+        .btn-mover:hover { background: var(--border-color); color: var(--text-primary); }
+        .btn-mover:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
         .pedido-pendiente {
             background: #fffbeb;
             border-left: 5px solid #f59e0b;
@@ -452,10 +487,14 @@
             margin-bottom: 0.5rem;
             transition: background 0.3s;
         }
-        .menu-item-card .info { display: flex; flex-direction: column; gap: 0.2rem; }
+        .menu-item-card .info { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; }
         .menu-item-card .nombre { font-weight: 600; }
         .menu-item-card .precio { font-size: 0.85rem; color: var(--text-secondary); }
-        .menu-item-card .acciones { display: flex; gap: 0.4rem; }
+        .menu-item-card .acciones {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
         .form-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .form-row input { flex: 1; min-width: 120px; }
         @media (max-width: 640px) {
@@ -468,6 +507,8 @@
             #viewsContainer { padding: 0 0.8rem; }
             .card-panel { padding: 1rem; }
             .mesas-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.6rem; }
+            .menu-item-card { flex-wrap: wrap; gap: 0.5rem; }
+            .menu-item-card .acciones { width: 100%; justify-content: flex-end; }
         }
     </style>
 </head>
@@ -501,7 +542,7 @@
 
 <script>
     // ============================================================
-    // 🔥 TU CONFIGURACIÓN DE FIREBASE (proyecto "mibar-52b4d")
+    // 🔥 CONFIGURACIÓN DE FIREBASE (proyecto "mibar-52b4d")
     // ============================================================
     const firebaseConfig = {
         apiKey: "AIzaSyC-W7aK7ydDVZrC1TkwbQqee9ca9OCbNLM",
@@ -512,12 +553,10 @@
         messagingSenderId: "256299170602",
         appId: "1:256299170602:web:37c53d203adaace0d83c53"
     };
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    // ============================================================
 
-    // Estado local (se sincroniza con Firebase)
+    // Estado local
     let mesas = [];
     let pedidos = [];
     let nextPedidoId = 1;
@@ -533,19 +572,33 @@
     async function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         try {
+            // Código del Service Worker (inline)
             const swCode = `
                 self.addEventListener('install', e => self.skipWaiting());
                 self.addEventListener('activate', e => e.waitUntil(clients.claim()));
                 self.addEventListener('message', event => {
                     if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
                         const { title, body, tag } = event.data;
-                        self.registration.showNotification(title, { body, icon: '/icon-192.png', badge: '/icon-192.png', tag: tag || 'resto-push', vibrate: [200,100,200], requireInteraction: true });
+                        self.registration.showNotification(title, {
+                            body,
+                            icon: '/mibar/icon-192.png',
+                            badge: '/mibar/icon-192.png',
+                            tag: tag || 'resto-push',
+                            vibrate: [200,100,200],
+                            requireInteraction: true
+                        });
                     }
                 });
                 self.addEventListener('push', event => {
                     let data = { title: 'RestoPWA', body: 'Evento importante' };
                     if (event.data) try { data = event.data.json(); } catch(e) {}
-                    event.waitUntil(self.registration.showNotification(data.title, { body: data.body, icon: '/icon-192.png' }));
+                    event.waitUntil(
+                        self.registration.showNotification(data.title, {
+                            body: data.body,
+                            icon: '/mibar/icon-192.png',
+                            badge: '/mibar/icon-192.png'
+                        })
+                    );
                 });
             `;
             const blob = new Blob([swCode], { type: 'application/javascript' });
@@ -556,21 +609,36 @@
             if (Notification.permission === 'default') document.getElementById('requestPermisoBtn').style.display = 'inline-block';
             else if (Notification.permission === 'granted') document.getElementById('requestPermisoBtn').style.display = 'none';
             else document.getElementById('requestPermisoBtn').style.display = 'inline-block';
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error('Error registrando SW:', err);
+        }
     }
+
     async function solicitarPermisoNotificaciones() {
         if (!('Notification' in window)) return alert('No soportado');
         if (Notification.permission === 'granted') return;
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
             document.getElementById('requestPermisoBtn').style.display = 'none';
-            if (swRegistration?.active) swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title: '✅ Notificaciones activas', body: 'Recibirás alertas de mesas y pedidos.' });
+            if (swRegistration?.active) {
+                swRegistration.active.postMessage({
+                    type: 'SHOW_NOTIFICATION',
+                    title: '✅ Notificaciones activas',
+                    body: 'Recibirás alertas de mesas y pedidos.'
+                });
+            }
         }
     }
+
     async function enviarNotificacionPush(title, body, rolDestino = null) {
         if (!swRegistration?.active || Notification.permission !== 'granted') return;
         if (rolDestino && currentRole !== rolDestino) return;
-        swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag: `resto-${Date.now()}` });
+        swRegistration.active.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title,
+            body,
+            tag: `resto-${Date.now()}`
+        });
     }
 
     // ---------- FUNCIONES DE SINCRONIZACIÓN CON FIREBASE ----------
@@ -603,7 +671,6 @@
         }
     }
 
-    // Escuchar cambios en tiempo real desde Firebase
     function escucharCambios() {
         db.ref('restoData').on('value', (snapshot) => {
             cargarDatosDesdeFirebase(snapshot);
@@ -681,7 +748,7 @@
         return true;
     }
 
-    // ---------- GESTIÓN MENÚ DEL DÍA ----------
+    // ---------- GESTIÓN MENÚ DEL DÍA (con reordenamiento) ----------
     function agregarItemMenuDia(nombre, precio) {
         const nuevo = { id: Date.now(), nombre: nombre.trim(), precio: parseFloat(precio) };
         menuDia.push(nuevo);
@@ -701,6 +768,15 @@
             guardarDatos();
             mostrarToast(`✏️ Item actualizado`, ["host"]);
         }
+    }
+    function moverItemMenuDia(id, direccion) {
+        const index = menuDia.findIndex(item => item.id === id);
+        if (index === -1) return;
+        const nuevoIndex = index + direccion;
+        if (nuevoIndex < 0 || nuevoIndex >= menuDia.length) return;
+        [menuDia[index], menuDia[nuevoIndex]] = [menuDia[nuevoIndex], menuDia[index]];
+        guardarDatos();
+        mostrarToast(`🔄 Item reordenado`, ["host"]);
     }
 
     function actualizarVistaActual() {
@@ -726,7 +802,7 @@
             </div>
             <div class="card-panel">
                 <h2>📋 Menú del Día <span style="font-size:0.8rem;font-weight:400;color:var(--text-secondary);">(edición en tiempo real)</span></h2>
-                <p>Los platos del día aparecerán en la vista del mesero.</p>
+                <p>Los platos del día aparecerán en la vista del mesero. Usa las flechas ↑↓ para reordenar.</p>
                 <div style="margin-bottom:1rem;">
                     <div class="form-row">
                         <input type="text" id="nuevoItemNombre" placeholder="Nombre del plato" style="flex:2;">
@@ -761,7 +837,9 @@
                 lista.innerHTML = "<div class='empty-message'>No hay platos en el menú del día. ¡Añade algunos!</div>";
             } else {
                 let html = "";
-                menuDia.forEach(item => {
+                menuDia.forEach((item, idx) => {
+                    const isFirst = idx === 0;
+                    const isLast = idx === menuDia.length - 1;
                     html += `
                         <div class="menu-item-card">
                             <div class="info">
@@ -769,6 +847,8 @@
                                 <div class="precio">$${item.precio.toFixed(2)}</div>
                             </div>
                             <div class="acciones">
+                                <button class="btn-mover" data-id="${item.id}" data-dir="-1" ${isFirst ? 'disabled' : ''} title="Subir">↑</button>
+                                <button class="btn-mover" data-id="${item.id}" data-dir="1" ${isLast ? 'disabled' : ''} title="Bajar">↓</button>
                                 <button class="btn-secundario btn-editar-menu" data-id="${item.id}" style="padding:0.2rem 0.6rem;font-size:0.7rem;">✏️</button>
                                 <button class="btn-peligro btn-eliminar-menu" data-id="${item.id}">🗑️</button>
                             </div>
@@ -776,6 +856,13 @@
                     `;
                 });
                 lista.innerHTML = html;
+                document.querySelectorAll(".btn-mover").forEach(btn => {
+                    btn.addEventListener("click", e => {
+                        const id = parseInt(btn.dataset.id);
+                        const dir = parseInt(btn.dataset.dir);
+                        moverItemMenuDia(id, dir);
+                    });
+                });
                 document.querySelectorAll(".btn-editar-menu").forEach(btn => {
                     btn.addEventListener("click", e => {
                         const id = parseInt(btn.dataset.id);
@@ -1038,7 +1125,6 @@
 
         await registerServiceWorker();
         initRoleButtons();
-        // La vista se actualizará al recibir datos de Firebase
 
         document.getElementById("requestPermisoBtn").addEventListener("click", solicitarPermisoNotificaciones);
         initTheme();
