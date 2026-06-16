@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>RestoPWA - Gestión de Restaurante</title>
 
-    <!-- ========== OPEN GRAPH (para compartir en redes) ========== -->
+    <!-- Open Graph para compartir -->
     <meta property="og:title" content="RestoPWA - Gestión de Restaurante" />
     <meta property="og:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
     <meta property="og:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
@@ -16,12 +16,12 @@
     <meta name="twitter:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
     <meta name="twitter:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
 
-    <!-- ========== ICONOS PWA ========== -->
-    <link rel="manifest" href="/mibar/manifest.json" />
-    <link rel="apple-touch-icon" href="/mibar/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/mibar/icon-192.png" />
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png" />
 
-    <!-- ========== FUENTES Y FIREBASE ========== -->
+    <!-- Fuentes y Firebase -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
@@ -29,7 +29,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* ========== CSS ========== */
+        /* ===== RESET Y VARIABLES ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg-primary: #f1f5f9;
@@ -92,6 +92,7 @@
             padding-bottom: 2rem;
             transition: background 0.3s, color 0.3s;
         }
+        /* ===== HEADER ===== */
         .app-header {
             background: var(--bg-header);
             backdrop-filter: blur(16px) saturate(180%);
@@ -172,6 +173,7 @@
             stroke-width: 2;
             transition: transform 0.4s;
         }
+        /* ===== NAV ROLES ===== */
         .nav-roles {
             display: flex;
             background: var(--nav-bg);
@@ -235,6 +237,8 @@
         @media (prefers-reduced-motion: reduce) {
             ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
         }
+
+        /* ===== CONTENEDOR PRINCIPAL ===== */
         #viewsContainer {
             max-width: 1200px;
             margin: 1.5rem auto;
@@ -264,44 +268,170 @@
             font-size: 0.9rem;
             margin-bottom: 1.2rem;
         }
-        .mesas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1rem;
+
+        /* ===== MAPA DEL RESTAURANTE (VISTA HOST) ===== */
+        .restaurant-map {
+            position: relative;
+            background: #e8d5b5; /* color madera */
+            border: 8px solid #8b7355;
+            border-radius: 20px;
+            padding: 30px 20px 20px 20px;
+            min-height: 500px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
         }
-        .mesa-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            padding: 1.2rem 0.8rem;
+        /* Escenario */
+        .stage {
+            background: #d4a373;
+            border: 3px solid #b5835a;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #3d2b1f;
+            width: 60%;
             text-align: center;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.15s, box-shadow 0.2s, background 0.3s, border-color 0.3s;
-            cursor: default;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
-        .mesa-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-        .mesa-card.ocupada { border-left: 5px solid #ef4444; background: #fef2f2; }
-        .mesa-card.disponible { border-left: 5px solid #22c55e; background: #f0fdf4; }
-        @media (prefers-color-scheme: dark) {
-            .mesa-card.ocupada { background: #1f2a3f; border-left-color: #ef4444; }
-            .mesa-card.disponible { background: #1a2e2a; border-left-color: #22c55e; }
+        .stage::before { content: "🎤 "; }
+        /* Zona mesas */
+        .tables-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px 50px;
+            width: 100%;
+            max-width: 700px;
+            margin: 10px 0;
+            justify-items: center;
         }
-        .numero-mesa { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
-        .estado-texto { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; margin: 0.4rem 0 0.8rem; color: var(--text-secondary); }
-        .btn-mesa { padding: 0.5rem 0.8rem; border: none; border-radius: var(--radius-full); font-weight: 600; font-size: 0.8rem; cursor: pointer; width: 100%; transition: 0.15s; }
-        .btn-ocupar { background: #f97316; color: white; }
-        .btn-ocupar:hover { background: #ea580c; transform: scale(0.98); }
-        .btn-liberar { background: #64748b; color: white; }
-        .btn-liberar:hover { background: #475569; transform: scale(0.98); }
-        .aviso-ocupacion {
-            background: var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 0.8rem 1rem;
+        /* Cada mesa */
+        .table-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-width: 110px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #1e293b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 3px solid #ffffff80;
+            position: relative;
+            padding: 0.5rem;
+        }
+        .table-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+        .table-item .table-number {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .table-item .table-chairs {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(0,0,0,0.2);
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+            margin-top: 2px;
+        }
+        /* Estados de las mesas */
+        .table-item.estado-disponible {
+            background: #22c55e; /* verde */
+            color: #064e3b;
+        }
+        .table-item.estado-reservada {
+            background: #facc15; /* amarillo */
+            color: #78350f;
+        }
+        .table-item.estado-ocupada {
+            background: #ef4444; /* rojo */
+            color: #7f1d1d;
+        }
+        /* Elementos del local */
+        .local-elements {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        .local-element {
+            background: #b5835a;
+            border: 3px solid #8b6b44;
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2d1e12;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            text-align: center;
+            flex: 1;
+            min-width: 80px;
+        }
+        .local-element.bar { background: #a67c52; }
+        .local-element.kitchen { background: #c79a6e; }
+        .local-element.bathroom { background: #b8a08a; }
+        .local-element.entrance {
+            background: #c9b99a;
+            border-style: dashed;
+            font-size: 1rem;
+        }
+        .local-element.entrance::before { content: "🚪 "; }
+
+        /* Leyenda de estados */
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 15px;
             font-size: 0.85rem;
-            margin-top: 1.2rem;
-            line-height: 1.5;
-            transition: background 0.3s;
+            font-weight: 500;
         }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #ffffff80;
+        }
+
+        /* Responsive del mapa */
+        @media (max-width: 700px) {
+            .tables-area {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            .table-item {
+                max-width: 90px;
+                font-size: 1rem;
+            }
+            .table-item .table-number { font-size: 1.2rem; }
+            .restaurant-map { padding: 20px 12px; }
+            .local-elements { flex-direction: column; align-items: stretch; }
+        }
+        @media (max-width: 450px) {
+            .tables-area { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .table-item { max-width: 70px; }
+            .table-item .table-number { font-size: 1rem; }
+        }
+
+        /* ===== ESTILOS GENERALES (card, botones, etc.) ===== */
         .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem; }
         label { font-weight: 500; font-size: 0.9rem; color: var(--text-secondary); }
         select, input, textarea {
@@ -497,6 +627,15 @@
         }
         .form-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .form-row input { flex: 1; min-width: 120px; }
+        .aviso-ocupacion {
+            background: var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 1rem;
+            font-size: 0.85rem;
+            margin-top: 1.2rem;
+            line-height: 1.5;
+            transition: background 0.3s;
+        }
         @media (max-width: 640px) {
             .app-header { flex-direction: column; align-items: stretch; gap: 0.6rem; }
             .logo-area { justify-content: center; }
@@ -506,7 +645,6 @@
             .pill svg { width: 14px; height: 14px; }
             #viewsContainer { padding: 0 0.8rem; }
             .card-panel { padding: 1rem; }
-            .mesas-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.6rem; }
             .menu-item-card { flex-wrap: wrap; gap: 0.5rem; }
             .menu-item-card .acciones { width: 100%; justify-content: flex-end; }
         }
@@ -556,7 +694,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Estado local
+    // ============================================================
+    // ESTADO GLOBAL
+    // ============================================================
     let mesas = [];
     let pedidos = [];
     let nextPedidoId = 1;
@@ -568,11 +708,12 @@
     let currentRole = "host";
     let swRegistration = null;
 
-    // ---------- SERVICE WORKER (Notificaciones Push) ----------
+    // ============================================================
+    // SERVICE WORKER (Notificaciones Push)
+    // ============================================================
     async function registerServiceWorker() {
         if (!('serviceWorker' in navigator)) return;
         try {
-            // Código del Service Worker (inline)
             const swCode = `
                 self.addEventListener('install', e => self.skipWaiting());
                 self.addEventListener('activate', e => e.waitUntil(clients.claim()));
@@ -641,7 +782,9 @@
         });
     }
 
-    // ---------- FUNCIONES DE SINCRONIZACIÓN CON FIREBASE ----------
+    // ============================================================
+    // SINCRONIZACIÓN CON FIREBASE
+    // ============================================================
     function guardarDatos() {
         const data = { mesas, pedidos, nextPedidoId, eventosOcupacion: eventosOcupacion.slice(-6), menuDia };
         db.ref('restoData').set(data).catch(err => console.error('Error guardando en Firebase:', err));
@@ -655,9 +798,24 @@
             nextPedidoId = data.nextPedidoId || 1;
             eventosOcupacion = data.eventosOcupacion || [];
             menuDia = data.menuDia || [];
+            // Asegurar que las mesas tengan capacidad
             if (mesas.length === 0) {
-                for (let i = 1; i <= 8; i++) mesas.push({ id: i, numero: i, estado: 'disponible' });
+                // 6 mesas con capacidades que sumen 8 sillas
+                const capacidades = [2, 2, 1, 1, 1, 1];
+                for (let i = 0; i < 6; i++) {
+                    mesas.push({
+                        id: i + 1,
+                        numero: i + 1,
+                        estado: 'disponible', // disponible, reservada, ocupada
+                        capacidad: capacidades[i]
+                    });
+                }
                 guardarDatos();
+            } else {
+                // Asegurar que cada mesa tenga capacidad (si no, asignar por defecto)
+                mesas.forEach(m => {
+                    if (!m.capacidad) m.capacidad = 1;
+                });
             }
             if (menuDia.length > 0 && !menuDia[0].id) {
                 menuDia = menuDia.map((item, idx) => ({ ...item, id: Date.now() + idx }));
@@ -665,7 +823,16 @@
             }
             actualizarVistaActual();
         } else {
-            for (let i = 1; i <= 8; i++) mesas.push({ id: i, numero: i, estado: 'disponible' });
+            // Primera vez: inicializar datos
+            const capacidades = [2, 2, 1, 1, 1, 1];
+            for (let i = 0; i < 6; i++) {
+                mesas.push({
+                    id: i + 1,
+                    numero: i + 1,
+                    estado: 'disponible',
+                    capacidad: capacidades[i]
+                });
+            }
             guardarDatos();
             actualizarVistaActual();
         }
@@ -686,12 +853,53 @@
         setTimeout(() => toast.remove(), 3000);
     }
 
-    // ---------- ACCIONES DE NEGOCIO ----------
-    function ocuparMesa(idMesa) {
-        const mesa = mesas.find(m => m.id === idMesa);
-        if (!mesa || mesa.estado === "ocupada") return false;
-        mesa.estado = "ocupada";
-        const msg = `🪑 Mesa ${mesa.numero} OCUPADA.`;
+    // ============================================================
+    // ACCIONES DE NEGOCIO
+    // ============================================================
+    function cambiarEstadoMesa(id) {
+        const mesa = mesas.find(m => m.id === id);
+        if (!mesa) return false;
+        // Ciclo: disponible -> reservada -> ocupada -> disponible
+        if (mesa.estado === 'disponible') {
+            mesa.estado = 'reservada';
+            const msg = `🟡 Mesa ${mesa.numero} RESERVADA.`;
+            eventosOcupacion.unshift(msg);
+            if (eventosOcupacion.length > 6) eventosOcupacion.pop();
+            guardarDatos();
+            mostrarToast(msg, ["host"]);
+            enviarNotificacionPush("Mesa reservada", `Mesa ${mesa.numero} ha sido reservada.`, "host");
+        } else if (mesa.estado === 'reservada') {
+            mesa.estado = 'ocupada';
+            const msg = `🔴 Mesa ${mesa.numero} OCUPADA.`;
+            eventosOcupacion.unshift(msg);
+            if (eventosOcupacion.length > 6) eventosOcupacion.pop();
+            guardarDatos();
+            mostrarToast(msg, ["host"]);
+            enviarNotificacionPush("Mesa ocupada", `Mesa ${mesa.numero} ha sido ocupada.`, "host");
+        } else if (mesa.estado === 'ocupada') {
+            // Verificar si tiene pedidos activos
+            const pedidosActivos = pedidos.filter(p => p.mesaId === id && (p.estado === "pendiente" || p.estado === "listo"));
+            if (pedidosActivos.length > 0) {
+                mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar. No se puede liberar.`, ["host"]);
+                return false;
+            }
+            mesa.estado = 'disponible';
+            const msg = `🟢 Mesa ${mesa.numero} disponible.`;
+            eventosOcupacion.unshift(msg);
+            if (eventosOcupacion.length > 6) eventosOcupacion.pop();
+            guardarDatos();
+            mostrarToast(msg, ["host"]);
+            enviarNotificacionPush("Mesa disponible", `Mesa ${mesa.numero} ahora está libre.`, "host");
+        }
+        return true;
+    }
+
+    // Funciones antiguas de ocupar/liberar se mantienen por compatibilidad (ya no se usan desde el mapa)
+    function ocuparMesa(id) {
+        const mesa = mesas.find(m => m.id === id);
+        if (!mesa || mesa.estado === 'ocupada') return false;
+        mesa.estado = 'ocupada';
+        const msg = `🔴 Mesa ${mesa.numero} OCUPADA.`;
         eventosOcupacion.unshift(msg);
         if (eventosOcupacion.length > 6) eventosOcupacion.pop();
         guardarDatos();
@@ -699,16 +907,16 @@
         enviarNotificacionPush("Mesa ocupada", `Mesa ${mesa.numero} ha sido ocupada.`, "host");
         return true;
     }
-    function liberarMesa(idMesa) {
-        const mesa = mesas.find(m => m.id === idMesa);
-        if (!mesa || mesa.estado === "disponible") return false;
-        const pedidosActivos = pedidos.filter(p => p.mesaId === idMesa && (p.estado === "pendiente" || p.estado === "listo"));
+    function liberarMesa(id) {
+        const mesa = mesas.find(m => m.id === id);
+        if (!mesa || mesa.estado === 'disponible') return false;
+        const pedidosActivos = pedidos.filter(p => p.mesaId === id && (p.estado === "pendiente" || p.estado === "listo"));
         if (pedidosActivos.length > 0) {
             mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar.`, ["host"]);
             return false;
         }
-        mesa.estado = "disponible";
-        const msg = `✅ Mesa ${mesa.numero} liberada.`;
+        mesa.estado = 'disponible';
+        const msg = `🟢 Mesa ${mesa.numero} disponible.`;
         eventosOcupacion.unshift(msg);
         if (eventosOcupacion.length > 6) eventosOcupacion.pop();
         guardarDatos();
@@ -716,6 +924,7 @@
         enviarNotificacionPush("Mesa disponible", `Mesa ${mesa.numero} ahora está libre.`, "host");
         return true;
     }
+
     function agregarPedido(mesaId, itemsSeleccionados, waiterName) {
         if (!waiterName.trim()) { mostrarToast("Ingresa nombre del mesero", ["mesero"]); return false; }
         const mesa = mesas.find(m => m.id === mesaId);
@@ -748,7 +957,9 @@
         return true;
     }
 
-    // ---------- GESTIÓN MENÚ DEL DÍA (con reordenamiento) ----------
+    // ============================================================
+    // GESTIÓN MENÚ DEL DÍA
+    // ============================================================
     function agregarItemMenuDia(nombre, precio) {
         const nuevo = { id: Date.now(), nombre: nombre.trim(), precio: parseFloat(precio) };
         menuDia.push(nuevo);
@@ -779,6 +990,9 @@
         mostrarToast(`🔄 Item reordenado`, ["host"]);
     }
 
+    // ============================================================
+    // RENDERIZADO DE VISTAS
+    // ============================================================
     function actualizarVistaActual() {
         if (currentRole === "mesero") {
             const nombreInput = document.getElementById("meseroNombreInput");
@@ -789,17 +1003,56 @@
         else if (currentRole === "cocina") renderCocinaView();
     }
 
-    // ---------- RENDERIZADO DE VISTAS ----------
+    // ---------- VISTA HOST: MAPA DEL RESTAURANTE ----------
     function renderHostView() {
         const container = document.getElementById("viewsContainer");
         if (!container) return;
+
+        // Ordenar mesas por número para mostrarlas en orden
+        const mesasOrdenadas = [...mesas].sort((a, b) => a.numero - b.numero);
+
+        // Construir el HTML del mapa
+        let mesasHtml = '';
+        mesasOrdenadas.forEach(mesa => {
+            const estadoClass = `estado-${mesa.estado}`;
+            mesasHtml += `
+                <div class="table-item ${estadoClass}" data-id="${mesa.id}" title="Mesa ${mesa.numero} - ${mesa.estado} - ${mesa.capacidad} sillas">
+                    <span class="table-number">${mesa.numero}</span>
+                    <span class="table-chairs">${mesa.capacidad} 🪑</span>
+                </div>
+            `;
+        });
+
         container.innerHTML = `
             <div class="card-panel">
-                <h2>🗂️ Gestión de Mesas</h2>
-                <p>Ocupa o libera mesas. Las notificaciones push te mantienen informado.</p>
-                <div id="mesasGridHost" class="mesas-grid"></div>
-                <div class="aviso-ocupacion"><strong>📢 Últimas notificaciones</strong><br><span id="eventosHostList">${eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos"}</span></div>
+                <h2>🗺️ Plano del Restaurante</h2>
+                <p>Haz clic en una mesa para cambiar su estado: Libre (verde) → Reservada (amarillo) → Ocupada (rojo) → Libre.</p>
+                <div class="restaurant-map">
+                    <!-- Escenario -->
+                    <div class="stage">Escenario</div>
+
+                    <!-- Mesas (6 en el centro) -->
+                    <div class="tables-area">
+                        ${mesasHtml}
+                    </div>
+
+                    <!-- Elementos del local -->
+                    <div class="local-elements">
+                        <div class="local-element bar">🍸 Barra</div>
+                        <div class="local-element kitchen">🍳 Cocina</div>
+                        <div class="local-element bathroom">🚻 Baño</div>
+                        <div class="local-element entrance">Entrada</div>
+                    </div>
+
+                    <!-- Leyenda -->
+                    <div class="legend">
+                        <span class="legend-item"><span class="legend-color" style="background:#22c55e;"></span> Libre</span>
+                        <span class="legend-item"><span class="legend-color" style="background:#facc15;"></span> Reservada</span>
+                        <span class="legend-item"><span class="legend-color" style="background:#ef4444;"></span> Ocupada</span>
+                    </div>
+                </div>
             </div>
+
             <div class="card-panel">
                 <h2>📋 Menú del Día <span style="font-size:0.8rem;font-weight:400;color:var(--text-secondary);">(edición en tiempo real)</span></h2>
                 <p>Los platos del día aparecerán en la vista del mesero. Usa las flechas ↑↓ para reordenar.</p>
@@ -812,25 +1065,21 @@
                 </div>
                 <div id="listaMenuDiaHost"></div>
             </div>
-        `;
-        const grid = document.getElementById("mesasGridHost");
-        if (grid) {
-            grid.innerHTML = "";
-            mesas.forEach(mesa => {
-                const card = document.createElement("div");
-                card.className = `mesa-card ${mesa.estado}`;
-                card.innerHTML = `
-                    <div class="numero-mesa">${mesa.numero}</div>
-                    <div class="estado-texto">${mesa.estado === "ocupada" ? "🟠 OCUPADA" : "🟢 DISPONIBLE"}</div>
-                    ${mesa.estado === "disponible" ? '<button class="btn-mesa btn-ocupar" data-id="'+mesa.id+'">➕ Ocupar mesa</button>' : '<button class="btn-mesa btn-liberar" data-id="'+mesa.id+'">🔓 Liberar mesa</button>'}
-                `;
-                grid.appendChild(card);
-            });
-            document.querySelectorAll(".btn-ocupar").forEach(btn => btn.addEventListener("click", e => ocuparMesa(parseInt(btn.dataset.id))));
-            document.querySelectorAll(".btn-liberar").forEach(btn => btn.addEventListener("click", e => liberarMesa(parseInt(btn.dataset.id))));
-        }
-        document.getElementById("eventosHostList").innerHTML = eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos";
 
+            <div class="card-panel">
+                <div class="aviso-ocupacion"><strong>📢 Últimas notificaciones</strong><br><span id="eventosHostList">${eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos"}</span></div>
+            </div>
+        `;
+
+        // Eventos de clic en mesas
+        document.querySelectorAll('.table-item').forEach(el => {
+            el.addEventListener('click', function() {
+                const id = parseInt(this.dataset.id);
+                cambiarEstadoMesa(id);
+            });
+        });
+
+        // Menú del día (igual que antes)
         const lista = document.getElementById("listaMenuDiaHost");
         if (lista) {
             if (menuDia.length === 0) {
@@ -894,8 +1143,10 @@
             document.getElementById("nuevoItemNombre").value = "";
             document.getElementById("nuevoItemPrecio").value = "";
         });
+        document.getElementById("eventosHostList").innerHTML = eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos";
     }
 
+    // ---------- VISTA MESERO (sin cambios) ----------
     function renderMeseroView() {
         const container = document.getElementById("viewsContainer");
         if (!container) return;
@@ -1006,6 +1257,7 @@
         document.getElementById("meseroNombreInput")?.addEventListener("input", actualizarListos);
     }
 
+    // ---------- VISTA COCINA (sin cambios) ----------
     function renderCocinaView() {
         const container = document.getElementById("viewsContainer");
         if (!container) return;
@@ -1041,7 +1293,9 @@
         actualizar();
     }
 
-    // ---------- NAVEGACIÓN CON VIEW TRANSITIONS ----------
+    // ============================================================
+    // NAVEGACIÓN ENTRE ROLES (con View Transitions)
+    // ============================================================
     function setRoleWithTransition(role) {
         if (role === currentRole) return;
         const oldRole = currentRole;
@@ -1081,7 +1335,9 @@
         if (currentBtn) currentBtn.classList.add("active");
     }
 
-    // ---------- TEMA OSCURO/CLARO MANUAL ----------
+    // ============================================================
+    // TEMA OSCURO/CLARO MANUAL
+    // ============================================================
     function initTheme() {
         const savedTheme = localStorage.getItem("resto_theme");
         const body = document.body;
@@ -1113,9 +1369,10 @@
         });
     }
 
-    // ---------- INICIALIZACIÓN ----------
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
     async function init() {
-        // Conectar a Firebase y escuchar cambios
         escucharCambios();
 
         const savedRole = localStorage.getItem("resto_currentRole");
