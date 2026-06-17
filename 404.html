@@ -328,6 +328,12 @@
             border-radius: 20px;
             margin-top: 2px;
         }
+        /* Indicador de que se puede editar con doble clic */
+        .table-item .edit-hint {
+            font-size: 0.6rem;
+            opacity: 0.5;
+            margin-top: 4px;
+        }
         .table-item.estado-disponible {
             background: #22c55e;
             color: #064e3b;
@@ -695,11 +701,9 @@
     async function registerFCMSW() {
         if (!('serviceWorker' in navigator)) return;
         try {
-            // Registrar el Service Worker de FCM (archivo estático)
             const registration = await navigator.serviceWorker.register('/mibar/firebase-messaging-sw.js');
             console.log('Service Worker de FCM registrado:', registration);
             await messaging.useServiceWorker(registration);
-            // Solicitar token
             await requestFCMToken();
         } catch (err) {
             console.error('Error registrando SW de FCM:', err);
@@ -708,7 +712,6 @@
 
     async function requestFCMToken() {
         try {
-            // Verificar permiso de notificaciones
             if (Notification.permission !== 'granted') {
                 const perm = await Notification.requestPermission();
                 if (perm !== 'granted') {
@@ -717,21 +720,18 @@
                 }
             }
 
-            // Obtener token de FCM
             const token = await messaging.getToken({
                 vapidKey: 'BL0KBt0n9D-HH_Xh9qNSTuG6z3MvnKt_IBlRlzvLQ9aePx6AqN5os-GL6J-IiRKG-n7p4BSW26MLR5oixQjNW8I'
             });
             console.log('Token FCM:', token);
             fcmToken = token;
 
-            // Guardar token en Firebase Realtime Database (para enviar notificaciones desde un panel)
             db.ref('fcmTokens').push({
                 token: token,
                 userAgent: navigator.userAgent,
                 timestamp: Date.now()
             });
 
-            // Ocultar el botón de activación
             document.getElementById('requestPermisoBtn').style.display = 'none';
             mostrarToast('🔔 Notificaciones push activadas', ['host','mesero','cocina']);
             return token;
@@ -741,7 +741,6 @@
         }
     }
 
-    // Manejar mensajes en primer plano (cuando la app está abierta)
     messaging.onMessage((payload) => {
         console.log('Mensaje en primer plano:', payload);
         const title = payload.notification?.title || 'RestoPWA';
@@ -829,7 +828,6 @@
             if (eventosOcupacion.length > 6) eventosOcupacion.pop();
             guardarDatos();
             mostrarToast(msg, ["host"]);
-            // Enviar notificación push nativa (a través de FCM)
             enviarNotificacionFCM('Mesa reservada', `Mesa ${mesa.numero} ha sido reservada.`);
         } else if (mesa.estado === 'reservada') {
             mesa.estado = 'ocupada';
@@ -858,23 +856,35 @@
         return true;
     }
 
-    // Función para enviar notificaciones push nativas a través de FCM
-    // (Esta función envía un mensaje FCM desde el cliente, pero para notificaciones masivas
-    // lo ideal es usar un servidor o Firebase Console. Aquí lo dejamos como ejemplo.)
+    // ✅ NUEVA FUNCIÓN: Editar capacidad de una mesa
+    function editarCapacidad(id) {
+        const mesa = mesas.find(m => m.id === id);
+        if (!mesa) return;
+
+        const nuevaCap = prompt(`Ingresa el número de sillas para la Mesa ${mesa.numero}:`, mesa.capacidad);
+        if (nuevaCap === null) return; // Cancelar
+
+        const capNum = parseInt(nuevaCap);
+        if (isNaN(capNum) || capNum <= 0) {
+            mostrarToast('❌ Ingresa un número válido de sillas (mayor a 0)', ["host"]);
+            return;
+        }
+
+        mesa.capacidad = capNum;
+        guardarDatos();
+        mostrarToast(`✅ Mesa ${mesa.numero} ahora tiene ${capNum} sillas`, ["host"]);
+        actualizarVistaActual(); // Refresca la vista para mostrar el nuevo valor
+    }
+
     async function enviarNotificacionFCM(title, body) {
         if (!fcmToken) {
             console.warn('No hay token FCM para enviar notificación');
             return;
         }
-        // Para enviar una notificación real, necesitas un servidor que use la Server Key de FCM.
-        // Esta función solo muestra un toast y un console.log.
-        // La notificación push real la enviará Firebase Console o un servidor backend.
         console.log(`📨 Notificación FCM: ${title} - ${body}`);
         // Aquí podrías llamar a un endpoint de tu servidor para enviar la notificación.
-        // Por ahora, solo la mostramos en consola.
     }
 
-    // Mantenemos las funciones antiguas para compatibilidad
     function liberarMesa(id) {
         const mesa = mesas.find(m => m.id === id);
         if (!mesa || mesa.estado === 'disponible') return false;
@@ -985,9 +995,10 @@
         mesasOrdenadas.forEach(mesa => {
             const estadoClass = `estado-${mesa.estado}`;
             mesasHtml += `
-                <div class="table-item ${estadoClass}" data-id="${mesa.id}" title="Mesa ${mesa.numero} - ${mesa.estado} - ${mesa.capacidad} sillas">
+                <div class="table-item ${estadoClass}" data-id="${mesa.id}" title="Mesa ${mesa.numero} - ${mesa.estado} - ${mesa.capacidad} sillas | Doble clic para editar sillas">
                     <span class="table-number">${mesa.numero}</span>
                     <span class="table-chairs">${mesa.capacidad} 🪑</span>
+                    <span class="edit-hint">✏️ doble clic</span>
                 </div>
             `;
         });
@@ -995,7 +1006,7 @@
         container.innerHTML = `
             <div class="card-panel">
                 <h2>🗺️ Plano del Restaurante</h2>
-                <p>Haz clic en una mesa para cambiar su estado: Libre (verde) → Reservada (amarillo) → Ocupada (rojo) → Libre.</p>
+                <p>Haz clic en una mesa para cambiar su estado. <strong>Doble clic</strong> para editar el número de sillas.</p>
                 <div class="restaurant-map">
                     <div class="tables-area">
                         ${mesasHtml}
@@ -1025,9 +1036,16 @@
         `;
 
         document.querySelectorAll('.table-item').forEach(el => {
+            // Click normal: cambiar estado
             el.addEventListener('click', function() {
                 const id = parseInt(this.dataset.id);
                 cambiarEstadoMesa(id);
+            });
+
+            // Doble clic: editar capacidad
+            el.addEventListener('dblclick', function() {
+                const id = parseInt(this.dataset.id);
+                editarCapacidad(id);
             });
         });
 
@@ -1099,6 +1117,7 @@
     }
 
     function renderMeseroView() {
+        // ... (igual que antes, sin cambios)
         const container = document.getElementById("viewsContainer");
         if (!container) return;
         container.innerHTML = `
@@ -1209,6 +1228,7 @@
     }
 
     function renderCocinaView() {
+        // ... (igual que antes, sin cambios)
         const container = document.getElementById("viewsContainer");
         if (!container) return;
         container.innerHTML = `
@@ -1323,22 +1343,18 @@
     // INICIALIZACIÓN
     // ============================================================
     async function init() {
-        // Conectar a Firebase y escuchar cambios
         escucharCambios();
 
-        // Cargar rol guardado
         const savedRole = localStorage.getItem("resto_currentRole");
         if (savedRole && ["host","mesero","cocina"].includes(savedRole)) currentRole = savedRole;
         else currentRole = "host";
         document.getElementById("currentRoleBadge").innerText = currentRole === "host" ? "👑 Host" : (currentRole === "mesero" ? "🧑‍🍳 Mesero" : "🍳 Cocina");
 
-        // Registrar ambos Service Workers
-        await registerInternalSW();  // SW interno para notificaciones desde la app
-        await registerFCMSW();       // SW de FCM para notificaciones push nativas
+        await registerInternalSW();
+        await registerFCMSW();
 
         initRoleButtons();
 
-        // Botón para activar notificaciones (solo si no está activado)
         document.getElementById("requestPermisoBtn").addEventListener("click", async () => {
             await requestFCMToken();
         });
