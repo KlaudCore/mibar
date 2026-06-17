@@ -1,35 +1,339 @@
-{
-  "name": "RestoPWA - Gestión de Restaurante",
-  "short_name": "RestoPWA",
-  "description": "Administra mesas, pedidos y menú en tiempo real con Firebase.",
-  "start_url": "/mibar/",
-  "display": "standalone",
-  "background_color": "#0b1121",
-  "theme_color": "#0b1121",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ]
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klaud Core | Desarrollo Web Premium, Apps & PWAs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Variables de diseño según nuestra paleta corporativa */
+        :root {
+            --bg-principal: #0d1117; /* Fondo gris oscuro estilo GitHub */
+            --bg-tarjetas: #161b22;
+            --texto-principal: #f0f6fc;
+            --texto-secundario: #8b949e;
+            --acento-azul: #58a6ff;
+            --acento-turquesa: #20c997; /* Verde menta/tecnológico de la nube */
+            --degradado-neon: linear-gradient(135deg, #0f4c81 0%, #17a2b8 60%, #20c997 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Contenedor Base */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- NAVBAR --- */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid #21262d;
+            position: sticky;
+            top: 0;
+            background-color: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-txt {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            background: var(--degradado-neon);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+
+        nav a {
+            color: var(--texto-secundario);
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--acento-turquesa);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 100px 0 80px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Elemento interactivo para el futuro lienzo 3D de Three.js */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span {
+            background: var(--degradado-neon);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--texto-secundario);
+            max-width: 700px;
+            margin: 0 auto 40px auto;
+            font-weight: 300;
+        }
+
+        .btn-principal {
+            display: inline-block;
+            padding: 14px 30px;
+            background: var(--degradado-neon);
+            color: var(--bg-principal);
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-principal:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(32, 201, 151, 0.2);
+        }
+
+        /* --- CASOS DE ÉXITO (PORTAFOLIO) --- */
+        .portafolio {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 4px;
+            background: var(--acento-turquesa);
+            margin: 10px auto 0 auto;
+            border-radius: 2px;
+        }
+
+        .grid-proyectos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        .card-proyecto {
+            background-color: var(--bg-tarjetas);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-proyecto:hover {
+            transform: translateY(-5px);
+            border-color: var(--acento-turquesa);
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .tag-stack {
+            font-size: 0.75rem;
+            background-color: rgba(88, 166, 255, 0.1);
+            color: var(--acento-azul);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .card-body h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .card-body p {
+            color: var(--texto-secundario);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .card-footer {
+            padding: 20px 25px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .enlace-proyecto {
+            color: var(--texto-principal);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+
+        .enlace-proyecto:hover {
+            color: var(--acento-turquesa);
+        }
+
+        .repo-git {
+            color: var(--texto-secundario);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .repo-git:hover {
+            color: var(--texto-principal);
+            text-decoration: underline;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid #21262d;
+            color: var(--texto-secundario);
+            font-size: 0.85rem;
+        }
+
+        /* Diseño Responsivo Extremo (Mobile First) */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.3rem; }
+            nav ul { display: none; } /* En móviles usaremos navegación compacta */
+            .grid-proyectos { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav">
+            <div class="logo-txt">KLAUD CORE</div>
+            <ul>
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#portafolio">Casos de Éxito</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <section id="inicio" class="hero">
+        <div id="canvas-container"></div>
+        
+        <div class="container">
+            <h1>Desarrollamos Aplicaciones Web de <span>Alto Rendimiento</span></h1>
+            <p>Especialistas en Progressive Web Apps (PWAs), interfaces interactivas de última generación y arquitecturas de software diseñadas para escalar sin límites.</p>
+            <a href="#portafolio" class="btn-principal">Ver Portafolio</a>
+        </div>
+    </section>
+
+    <section id="portafolio" class="portafolio">
+        <div class="container">
+            <h2 class="section-title">Nuestros Casos de Éxito</h2>
+            
+            <div class="grid-proyectos">
+                
+                <div class="card-proyecto">
+                    <div class="card-body">
+                        <span class="tag-stack">HTML5 • CSS3 • JS • PHP</span>
+                        <h3>Sistema de Gestión Local</h3>
+                        <p>Digitalización completa y control automatizado para un negocio de la comunidad. Diseñado para optimizar flujos internos con cero fricción de uso.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" target="_blank" class="enlace-proyecto">Visitar Sitio Web →</a>
+                        <a href="#" target="_blank" class="repo-git">Code Base</a>
+                    </div>
+                </div>
+
+                <div class="card-proyecto">
+                    <div class="card-body">
+                        <span class="tag-stack">HTML5 • THREE.JS • PWA</span>
+                        <h3>Portafolio Interactivo 3D</h3>
+                        <p>Experiencia inmersiva adaptada para la web utilizando aceleración gráfica directa en el navegador. Totalmente instalable y funcional sin conexión.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" target="_blank" class="enlace-proyecto">Visitar Sitio Web →</a>
+                        <a href="#" target="_blank" class="repo-git">Code Base</a>
+                    </div>
+                </div>
+
+                <div class="card-proyecto">
+                    <div class="card-body">
+                        <span class="tag-stack">C++ • WEBASSEMBLY • JS</span>
+                        <h3>Módulo de Procesamiento Web</h3>
+                        <p>Demostración de potencia pura en el navegador compilando código de bajo nivel (C++) para ejecutar algoritmos con velocidad de software nativo.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="#" target="_blank" class="enlace-proyecto">Visitar Sitio Web →</a>
+                        <a href="#" target="_blank" class="repo-git">Code Base</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer id="contacto">
+        <div class="container">
+            <p>&copy; 2026 Klaud Core. Código abierto y optimizado para la web del futuro.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
