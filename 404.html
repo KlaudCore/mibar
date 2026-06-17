@@ -801,7 +801,7 @@
     }
 
     // ============================================================
-    // ACCIONES DE NEGOCIO
+    // ACCIONES DE NEGOCIO (MODIFICADAS CON MENSAJE MEJORADO)
     // ============================================================
     function cambiarEstadoMesa(id) {
         const mesa = mesas.find(m => m.id === id);
@@ -825,7 +825,9 @@
         } else if (mesa.estado === 'ocupada') {
             const pedidosActivos = pedidos.filter(p => p.mesaId === id && (p.estado === "pendiente" || p.estado === "listo"));
             if (pedidosActivos.length > 0) {
-                mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar. No se puede liberar.`, ["host"]);
+                const ids = pedidosActivos.map(p => `#${p.id}`).join(', ');
+                mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar (${ids}). No se puede liberar.`, ["host"]);
+                console.warn(`Pedidos activos en mesa ${mesa.numero}:`, pedidosActivos);
                 return false;
             }
             mesa.estado = 'disponible';
@@ -839,24 +841,14 @@
         return true;
     }
 
-    function ocuparMesa(id) {
-        const mesa = mesas.find(m => m.id === id);
-        if (!mesa || mesa.estado === 'ocupada') return false;
-        mesa.estado = 'ocupada';
-        const msg = `🔴 Mesa ${mesa.numero} OCUPADA.`;
-        eventosOcupacion.unshift(msg);
-        if (eventosOcupacion.length > 6) eventosOcupacion.pop();
-        guardarDatos();
-        mostrarToast(msg, ["host"]);
-        enviarNotificacionPush("Mesa ocupada", `Mesa ${mesa.numero} ha sido ocupada.`, "host");
-        return true;
-    }
     function liberarMesa(id) {
         const mesa = mesas.find(m => m.id === id);
         if (!mesa || mesa.estado === 'disponible') return false;
         const pedidosActivos = pedidos.filter(p => p.mesaId === id && (p.estado === "pendiente" || p.estado === "listo"));
         if (pedidosActivos.length > 0) {
-            mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar.`, ["host"]);
+            const ids = pedidosActivos.map(p => `#${p.id}`).join(', ');
+            mostrarToast(`❌ Mesa ${mesa.numero}: tiene pedidos sin entregar (${ids}). No se puede liberar.`, ["host"]);
+            console.warn(`Pedidos activos en mesa ${mesa.numero}:`, pedidosActivos);
             return false;
         }
         mesa.estado = 'disponible';
@@ -902,7 +894,7 @@
     }
 
     // ============================================================
-    // GESTIÓN MENÚ DEL DÍA
+    // GESTIÓN MENÚ DEL DÍA (sin cambios)
     // ============================================================
     function agregarItemMenuDia(nombre, precio) {
         const nuevo = { id: Date.now(), nombre: nombre.trim(), precio: parseFloat(precio) };
@@ -935,7 +927,7 @@
     }
 
     // ============================================================
-    // RENDERIZADO DE VISTAS
+    // RENDERIZADO DE VISTAS (sin cambios en la estructura, solo se llama a las funciones)
     // ============================================================
     function actualizarVistaActual() {
         if (currentRole === "mesero") {
@@ -947,7 +939,6 @@
         else if (currentRole === "cocina") renderCocinaView();
     }
 
-    // ---------- VISTA HOST: MAPA DEL RESTAURANTE (SOLO MESAS) ----------
     function renderHostView() {
         const container = document.getElementById("viewsContainer");
         if (!container) return;
@@ -970,12 +961,9 @@
                 <h2>🗺️ Plano del Restaurante</h2>
                 <p>Haz clic en una mesa para cambiar su estado: Libre (verde) → Reservada (amarillo) → Ocupada (rojo) → Libre.</p>
                 <div class="restaurant-map">
-                    <!-- Mesas (6 en el centro) -->
                     <div class="tables-area">
                         ${mesasHtml}
                     </div>
-
-                    <!-- Leyenda -->
                     <div class="legend">
                         <span class="legend-item"><span class="legend-color" style="background:#22c55e;"></span> Libre</span>
                         <span class="legend-item"><span class="legend-color" style="background:#facc15;"></span> Reservada</span>
@@ -983,7 +971,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="card-panel">
                 <h2>📋 Menú del Día <span style="font-size:0.8rem;font-weight:400;color:var(--text-secondary);">(edición en tiempo real)</span></h2>
                 <p>Los platos del día aparecerán en la vista del mesero. Usa las flechas ↑↓ para reordenar.</p>
@@ -996,7 +983,6 @@
                 </div>
                 <div id="listaMenuDiaHost"></div>
             </div>
-
             <div class="card-panel">
                 <div class="aviso-ocupacion"><strong>📢 Últimas notificaciones</strong><br><span id="eventosHostList">${eventosOcupacion.map(e=>`🔹 ${e}`).join("<br>") || "Sin eventos"}</span></div>
             </div>
