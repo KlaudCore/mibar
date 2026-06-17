@@ -1,139 +1,35 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>RestoPWA - Gestión de Restaurante</title>
-
-    <!-- Open Graph para compartir -->
-    <meta property="og:title" content="RestoPWA - Gestión de Restaurante" />
-    <meta property="og:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
-    <meta property="og:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
-    <meta property="og:url" content="https://klaudcore.github.io/mibar/" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="RestoPWA - Gestión de Restaurante" />
-    <meta name="twitter:description" content="Administra mesas, pedidos y menú en tiempo real con Firebase." />
-    <meta name="twitter:image" content="https://klaudcore.github.io/mibar/preview-image.png" />
-
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png" />
-
-    <!-- Fuentes y Firebase (con Messaging) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
-
-    <!-- ===== ESTILOS (se mantienen igual que antes) ===== -->
-    <style>
-        /* ... (aquí todo el CSS que ya tenías, sin cambios) ... */
-        /* Para no alargar, pondré un enlace al CSS completo más abajo, pero puedes copiar el CSS de la versión anterior */
-    </style>
-</head>
-<body>
-<!-- ... (el mismo HTML del header y navegación) ... -->
-
-<div id="viewsContainer"></div>
-
-<script>
-    // ============================================================
-    // 🔥 CONFIGURACIÓN DE FIREBASE (proyecto "mibar-52b4d")
-    // ============================================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyC-W7aK7ydDVZrC1TkwbQqee9ca9OCbNLM",
-        authDomain: "mibar-52b4d.firebaseapp.com",
-        databaseURL: "https://mibar-52b4d-default-rtdb.firebaseio.com",
-        projectId: "mibar-52b4d",
-        storageBucket: "mibar-52b4d.firebasestorage.app",
-        messagingSenderId: "256299170602",
-        appId: "1:256299170602:web:37c53d203adaace0d83c53"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const messaging = firebase.messaging();
-
-    // ============================================================
-    // ========== FCM (Notificaciones Push) ==========
-    // ============================================================
-    async function requestFCMToken() {
-        try {
-            // Solicitar permiso de notificaciones (ya lo hacemos antes)
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                console.warn('Permiso de notificaciones denegado');
-                return;
-            }
-
-            // Obtener el token de FCM (esto requiere que el Service Worker de FCM esté registrado)
-            const token = await messaging.getToken({
-                vapidKey: 'TU_VAPID_KEY' // ✅ OPCIONAL: si usas VAPID, ponlo; si no, puedes omitir.
-                // Si no tienes VAPID, FCM usará la clave del proyecto.
-            });
-            console.log('Token FCM:', token);
-
-            // Guardar el token en Firebase Realtime Database (para poder enviar notificaciones desde un panel)
-            db.ref('fcmTokens').push({
-                token: token,
-                userAgent: navigator.userAgent,
-                timestamp: Date.now()
-            });
-
-            // Mostrar un mensaje de éxito
-            mostrarToast('🔔 Notificaciones push activadas', ['host','mesero','cocina']);
-            return token;
-        } catch (err) {
-            console.error('Error obteniendo token FCM:', err);
-        }
+{
+  "name": "RestoPWA - Gestión de Restaurante",
+  "short_name": "RestoPWA",
+  "description": "Administra mesas, pedidos y menú en tiempo real con Firebase.",
+  "start_url": "/mibar/",
+  "display": "standalone",
+  "background_color": "#0b1121",
+  "theme_color": "#0b1121",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-
-    // Registrar el Service Worker de FCM (firebase-messaging-sw.js)
-    async function registerFCMSW() {
-        try {
-            const registration = await navigator.serviceWorker.register('/mibar/firebase-messaging-sw.js');
-            console.log('Service Worker de FCM registrado:', registration);
-            // Asignar el SW a Firebase Messaging
-            await messaging.useServiceWorker(registration);
-            // Llamar a la solicitud de token
-            await requestFCMToken();
-        } catch (err) {
-            console.error('Error registrando SW de FCM:', err);
-        }
-    }
-
-    // ============================================================
-    // RESTO DEL CÓDIGO (estado, acciones, renderizado, etc.)
-    // ============================================================
-    // ... Aquí va todo el código JavaScript que ya tenías (mesas, pedidos, funciones, etc.)
-    // ... pero asegúrate de llamar a registerFCMSW() en la inicialización.
-
-    // Inicialización
-    async function init() {
-        escucharCambios();
-
-        const savedRole = localStorage.getItem("resto_currentRole");
-        if (savedRole && ["host","mesero","cocina"].includes(savedRole)) currentRole = savedRole;
-        else currentRole = "host";
-        document.getElementById("currentRoleBadge").innerText = currentRole === "host" ? "👑 Host" : (currentRole === "mesero" ? "🧑‍🍳 Mesero" : "🍳 Cocina");
-
-        // Registrar el Service Worker de FCM (para notificaciones push)
-        await registerFCMSW();
-
-        // Registrar el Service Worker interno (para notificaciones desde la app) - ya lo tienes
-        // Pero puedes mantenerlo también.
-        await registerServiceWorker(); // esta es la que ya tenías
-
-        initRoleButtons();
-
-        document.getElementById("requestPermisoBtn").addEventListener("click", solicitarPermisoNotificaciones);
-        initTheme();
-    }
-
-    init();
-</script>
-</body>
-</html>
+  ]
+}
