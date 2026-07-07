@@ -1,4 +1,14 @@
 {
+  "name": "Mi Aplicación PWA",
+  "short_name": "MiPWA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "description": "Descripción de mi aplicación web progresiva",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "es",
   "icons": [
     {
       "src": "icon-192.png",
